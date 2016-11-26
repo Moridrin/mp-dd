@@ -54,7 +54,12 @@ class TimelineEvent
      */
     public static function get_all_by_tag($tag)
     {
-        $timeline_events = get_posts(array('post_type' => 'timeline_event', 'post_status' => 'publish'));
+        $args            = array(
+            'posts_per_page' => -1,
+            'post_type'      => 'timeline_event',
+            'post_status'    => 'publish',
+        );
+        $timeline_events = get_posts($args);
         $timeline_events = self::order_by_start_date($timeline_events);
         $relevant_events = array();
         foreach ($timeline_events as $event) {
@@ -85,7 +90,7 @@ class TimelineEvent
         foreach ($children as $child) {
             $events += TimelineEvent::get_all_for_post($child, $events);
         }
-        return $events;
+        return self::order_by_start_date($events);
     }
 
     /**
@@ -107,7 +112,9 @@ class TimelineEvent
     {
         $sortable_array = array();
         foreach ($timeline_events as $event) {
-            $event                                                          = new TimelineEvent($event);
+            if (!$event instanceof TimelineEvent) {
+                $event = new TimelineEvent($event);
+            }
             $sortable_array[date('Ymd', $event->startDate->getTimestamp())] = $event;
         }
         ksort($sortable_array);
