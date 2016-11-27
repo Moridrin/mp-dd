@@ -3,13 +3,14 @@
  * Plugin Name: MP D&D
  * Plugin URI: http://moridrin.com/mp-dd
  * Description: With MP D&D you have lots of functionality to keep track of your D&D world.
- * Version: 1.0
+ * Version: 1.0.2
  * Author: Jeroen Berkvens
  * Author URI: http://nl.linkedin.com/in/jberkvens/
  * License: WTFPL
  * License URI: http://www.wtfpl.net/txt/copying/
  */
 
+require_once 'mp-general/general.php';
 require_once 'models/TimelineEvent.php';
 require_once 'custom-types/timeline-event-post-type.php';
 require_once 'custom-types/timeline-event-content.php';
@@ -182,3 +183,24 @@ function mp_dd_timeline_events_updated_messages($messages)
 }
 
 add_filter('post_updated_messages', 'mp_dd_timeline_events_updated_messages');
+
+function mp_dd_custom_column_values($column, $post_id)
+{
+    switch ($column) {
+        case 'timeline_event_start_date':
+            echo get_post_meta($post_id, 'start_date', true);
+            break;
+
+        case 'timeline_event_end_date':
+            echo get_post_meta($post_id, 'end_date', true);
+            break;
+
+        case 'timeline_event_links':
+            foreach (get_post_meta($post_id, 'links')[0] as $id => $link) {
+                echo '<a href="' . get_post_permalink($id) . '">' . $link . '</a>,<br/>';
+            }
+            break;
+    }
+}
+
+add_action('manage_timeline_event_posts_custom_column', 'mp_dd_custom_column_values', 10, 2);

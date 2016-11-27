@@ -175,3 +175,63 @@ function mp_dd_save_timeline_event_meta($post_id, $post)
 }
 
 add_action('save_post', 'mp_dd_save_timeline_event_meta', 1, 2);
+
+function smp_dd_custom_timeline_event_columns($column_headers)
+{
+    unset($column_headers['author']);
+    unset($column_headers['comments']);
+    unset($column_headers['date']);
+    $column_headers['timeline_event_start_date'] = __('Start Date');
+    $column_headers['timeline_event_end_date']   = __('End Date');
+    $column_headers['timeline_event_links']      = __('Links');
+    return $column_headers;
+}
+
+add_action('manage_timeline_event_posts_columns', 'smp_dd_custom_timeline_event_columns');
+
+function smp_dd_custom_timeline_event_sortable_columns($columns)
+{
+    $columns['timeline_event_start_date'] = 'timeline_event_start_date';
+    $columns['timeline_event_end_date']   = 'timeline_event_end_date';
+    return $columns;
+}
+
+add_action('manage_edit-timeline_event_sortable_columns', 'smp_dd_custom_timeline_event_sortable_columns');
+
+function mp_dd_sort_timeline_events_on_date($vars)
+{
+    if (!isset($vars['post_type']) || $vars['post_type'] != 'timeline_event') {
+        return $vars;
+    }
+    if (strpos($_SERVER['REQUEST_URI'], 'orderby=') === false) {
+        $vars = array_merge(
+            $vars,
+            array(
+                'meta_key' => 'start_date',
+                'orderby'  => 'meta_value_num',
+                'order'  => 'DESC',
+            )
+        );
+    }
+    if ($vars['orderby'] == 'timeline_event_start_date') {
+        $vars = array_merge(
+            $vars,
+            array(
+                'meta_key' => 'start_date',
+                'orderby'  => 'meta_value_num',
+            )
+        );
+    }
+    if ($vars['orderby'] == 'timeline_event_end_date') {
+        $vars = array_merge(
+            $vars,
+            array(
+                'meta_key' => 'end_date',
+                'orderby'  => 'meta_value_num',
+            )
+        );
+    }
+    return $vars;
+}
+
+add_filter('request', 'mp_dd_sort_timeline_events_on_date');
