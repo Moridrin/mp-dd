@@ -34,6 +34,12 @@ The best way is to add an issue on GitHub (https://github.com/Moridrin/mp-dd/iss
 
 == Changelog ==
 
+= 1.0.3 =
+* Auto content links to Objects.
+  * Search on post_title.
+  * Search on aliases.
+* mp_dd_get_available_tags aliases are now linked to correct post_id.
+
 = 1.0.2 =
 * Custom columns for Events
 * Custom sorting for Events

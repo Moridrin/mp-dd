@@ -3,7 +3,7 @@
  * Plugin Name: MP D&D
  * Plugin URI: http://moridrin.com/mp-dd
  * Description: With MP D&D you have lots of functionality to keep track of your D&D world.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Jeroen Berkvens
  * Author URI: http://nl.linkedin.com/in/jberkvens/
  * License: WTFPL
@@ -11,6 +11,7 @@
  */
 
 require_once 'mp-general/general.php';
+require_once 'all-content-filter.php';
 require_once 'models/TimelineEvent.php';
 require_once 'custom-types/timeline-event-post-type.php';
 require_once 'custom-types/timeline-event-content.php';

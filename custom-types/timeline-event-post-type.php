@@ -100,7 +100,7 @@ function mp_dd_timeline_event_links()
     global $post;
     $used_links      = get_post_meta($post->ID, 'links', true);
     $used_links      = is_array($used_links) ? $used_links : array();
-    $available_links = array_diff(mp_dd_get_available_tags(false), $used_links);
+    $available_links = array_diff(mp_dd_get_available_tags(), $used_links);
     $links_string    = '';
     foreach ($used_links as $id => $link) {
         $links_string .= $id . ';' . $link;
@@ -160,7 +160,7 @@ function mp_dd_save_timeline_event_meta($post_id, $post)
     }
     if (isset($_POST['new_link']) && substr($_POST['new_link'], 0, 2) != -1) {
         $links            = get_post_meta($post->ID, 'links', true);
-        $tags             = mp_dd_get_available_tags(false);
+        $tags             = mp_dd_get_available_tags();
         $parts            = explode(';', $_POST['new_link']);
         $links[$parts[0]] = stripslashes($parts[1]);
         $links            = array_intersect($links, $tags);
