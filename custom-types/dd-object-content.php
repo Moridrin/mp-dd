@@ -37,6 +37,8 @@ function mp_dd_add_dd_object_content($content)
             'post_type'   => 'any',
             'numberposts' => -1,
             'post_status' => 'any',
+            'order'       => 'ASC',
+            'orderby'     => 'date',
         );
         $children = get_children($args);
         if (!empty($children)) {

@@ -34,6 +34,9 @@ The best way is to add an issue on GitHub (https://github.com/Moridrin/mp-dd/iss
 
 == Changelog ==
 
+= 1.0.4 =
+* Sort Objects.
+
 = 1.0.3 =
 * Auto content links to Objects.
   * Search on post_title.

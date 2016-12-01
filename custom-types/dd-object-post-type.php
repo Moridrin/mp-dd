@@ -285,3 +285,124 @@ add_filter(
     10,
     2
 );
+
+function mp_dd_include_custom_dd_object_filter_fields()
+{
+    if (strpos($_SERVER['REQUEST_URI'], 'edit.php?post_type=dd_object') === false || get_option('ssv_frontend_members_custom_users_filters', 'hide') == 'hide') {
+        return;
+    }
+    $fields = FrontendMembersField::getAll(array('field_type' => 'input'));
+    $fields = array('category');
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        foreach ($fields as $field) {
+            if (isset($_POST['clear_filters']) || !isset($_POST['filter_' . $field]) || empty($_POST['filter_' . $field])) {
+                unset($_SESSION['filter_' . $field]);
+            } else {
+                $_SESSION['filter_' . $field] = $_POST['filter_' . $field];
+            }
+        }
+        if (isset($_GET['paged']) && $_GET['paged'] > 1) {
+            $uri = $_SERVER['REQUEST_URI'];
+            $uri = str_replace('paged=' . $_GET['paged'], 'paged=1', $uri);
+            ssv_redirect($uri);
+        }
+    }
+    $filters     = '';
+    $selected    = json_decode(get_option('ssv_frontend_members_user_filters'));
+    $selected    = $selected ?: array();
+    $addedFields = array();
+    foreach ($fields as $field) {
+        /** @var FrontendMembersFieldInput $field */
+        if (in_array($field->name, $selected) && !in_array($field->name, $addedFields)) {
+            $filters .= '<div style="display: inline-block; margin-right: 6px;">';
+            $filters .= $field->getFilter();
+            $filters .= '</div>';
+            $addedFields[] = $field->name;
+        }
+    }
+    $filters .= '<br/><button type="submit" value="submit" class="button" style="margin-right: 6px;">Filter</button>';
+    $filters .= '<button type="submit" name="clear_filters" value="clear_filters" class="button">Clear Filters</button>';
+    ?>
+    <script>
+        window.onload = function () {
+            jQuery(document).ready(function ($) {
+                var old_filter_area = $('.subsubsub');
+                old_filter_area.before('<h2 style="margin-bottom: 0;">Filters</h2>');
+                old_filter_area.after('<form name="filter_form" method="post"><div id="filter_area"></div></form>');
+                <?php if (get_option('ssv_frontend_members_custom_users_filters', 'under') == 'replace'): ?>
+                old_filter_area.remove();
+                <?php endif; ?>
+                var filter_area = $('#filter_area');
+                filter_area.html('<?php echo $filters; ?>');
+            });
+        };
+    </script>
+    <?php
+}
+
+add_action('admin_init', 'mp_dd_include_custom_dd_object_filter_fields');
+
+function mp_dd_custom_dd_object_filters($query)
+{
+    if (strpos($_SERVER['REQUEST_URI'], 'users.php') === false) {
+        return $query;
+    }
+    global $wpdb;
+    $filtered = array();
+    $fields   = FrontendMembersField::getAll(array('field_type' => 'input'));
+    foreach ($fields as $field) {
+        /** @var FrontendMembersFieldInput $field */
+        if (isset($_SESSION['filter_' . $field->name]) && !in_array($field->name, $filtered)) {
+            $value = $_SESSION['filter_' . $field->name];
+            switch (get_class($field)) {
+                case FrontendMembersFieldInputCustom::class:
+                case FrontendMembersFieldInputText::class:
+                    $table_alias = $field->name . 'meta';
+                    $query->query_from .= " JOIN {$wpdb->usermeta} {$table_alias} ON {$table_alias}.user_id = {$wpdb->users}.ID AND {$table_alias}.meta_key = '{$field->name}'";
+                    if (strpos($value, '<') !== false) {
+                        $value = str_replace('<', '', $value);
+                        $query->query_where .= " AND {$table_alias}.meta_value < '{$value}'";
+                    } elseif (strpos($value, '>') !== false) {
+                        $value = str_replace('>', '', $value);
+                        $query->query_where .= " AND {$table_alias}.meta_value > '{$value}'";
+                    } elseif (strpos($value, '!') !== false && (strpos($value, "'") !== false || strpos($value, '"') !== false)) {
+                        $value = str_replace('!', '', $value);
+                        $value = str_replace("'", '', $value);
+                        $value = str_replace('"', '', $value);
+                        $query->query_where .= " AND {$table_alias}.meta_value != '{$value}'";
+                    } elseif (strpos($value, '!') !== false) {
+                        $value = str_replace('!', '', $value);
+                        $query->query_where .= " AND {$table_alias}.meta_value NOT LIKE '%{$value}%'";
+                    } elseif (strpos($value, "\\'") !== false || strpos($value, '\\"') !== false) {
+                        $value = str_replace("\\'", '', $value);
+                        $value = str_replace('\\"', '', $value);
+                        $query->query_where .= " AND {$table_alias}.meta_value = '{$value}'";
+                    } else {
+                        $query->query_where .= " AND {$table_alias}.meta_value LIKE '%{$value}%'";
+                    }
+                    break;
+                case FrontendMembersFieldInputImage::class:
+                    $table_alias = $field->name . 'meta';
+                    $query->query_from .= " LEFT OUTER JOIN {$wpdb->usermeta} {$table_alias} ON {$table_alias}.user_id = {$wpdb->users}.ID AND {$table_alias}.meta_key = '{$field->name}'";
+                    if ($value == 'no') {
+                        $query->query_where .= " AND profile_picturemeta.meta_key IS NULL";
+                    } else {
+                        $query->query_where .= " AND profile_picturemeta.meta_key = '" . $field->name . "'";
+                    }
+                    break;
+                case FrontendMembersFieldInputSelect::class:
+                case FrontendMembersFieldInputRoleCheckbox::class:
+                case FrontendMembersFieldInputTextCheckbox::class:
+                default:
+                    $table_alias = $field->name . 'meta';
+                    $query->query_from .= " JOIN {$wpdb->usermeta} {$table_alias} ON {$table_alias}.user_id = {$wpdb->users}.ID AND {$table_alias}.meta_key = '{$field->name}'";
+                    $query->query_where .= " AND {$table_alias}.meta_value LIKE '{$value}'";
+                    break;
+            }
+            $filtered[] = $field->name;
+        }
+    }
+    return $query;
+}
+
+add_filter('pre_user_query', 'mp_dd_custom_dd_object_filters');
