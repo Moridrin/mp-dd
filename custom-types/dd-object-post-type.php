@@ -29,7 +29,6 @@ function mp_dd_register_dd_object_post_category()
         'hierarchical'        => true,
         'description'         => 'D&D Objects filterable by category',
         'supports'            => array('title', 'editor', 'author', 'thumbnail', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'page-attributes'),
-        //        'taxonomies'          => array('dd_object_category', 'dd_tag'),
         'taxonomies'          => array('dd_object_category'),
         'public'              => true,
         'show_ui'             => true,
@@ -74,7 +73,8 @@ function mp_dd_add_dd_object_metaboxes()
 {
     add_meta_box('mp_dd_parent', 'Parent', 'mp_dd_parent', 'dd_object', 'side', 'default');
     add_meta_box('mp_dd_children', 'Children', 'mp_dd_chidren', 'dd_object', 'side', 'default');
-    add_meta_box('mp_dd_object_date', 'Alias', 'mp_dd_object_date', 'dd_object', 'side', 'default');
+    add_meta_box('mp_dd_object_aliases', 'Aliases', 'mp_dd_object_aliases', 'dd_object', 'side', 'default');
+    add_meta_box('mp_dd_object_user_access', 'User Access', 'mp_dd_object_user_access', 'dd_object', 'side', 'default');
 }
 
 add_action('add_meta_boxes', 'mp_dd_add_dd_object_metaboxes');
@@ -83,6 +83,7 @@ function mp_dd_parent()
 {
     global $post;
     ?>
+    <input type="hidden" value="no" name="display_parent"/>
     <label class="selectit"><input type="checkbox" name="display_parent" value="yes" <?= get_post_meta($post->ID, 'display_parent', true) == 'yes' ? 'checked' : '' ?>> Display Parent</label><br/><br/>
     <input type="text" name="display_parent_header" placeholder="Header" class="form-input-tip" size="16" autocomplete="off" value="<?= get_post_meta($post->ID, 'display_parent_header', true) ?>">
     <?php
@@ -92,12 +93,28 @@ function mp_dd_chidren()
 {
     global $post;
     ?>
+    <input type="hidden" value="no" name="display_children"/>
     <label class="selectit"><input type="checkbox" name="display_children" value="yes" <?= get_post_meta($post->ID, 'display_children', true) == 'yes' ? 'checked' : '' ?>> Display Children</label><br/><br/>
     <input type="text" name="display_children_header" placeholder="Header" class="form-input-tip" size="16" autocomplete="off" value="<?= get_post_meta($post->ID, 'display_children_header', true) ?>">
     <?php
 }
 
-function mp_dd_object_date()
+function mp_dd_object_user_access()
+{
+    global $post;
+    $users = get_users(array('exclude' => array(get_option('mp_dd_dungeon_master', 1))));
+    $selected = get_post_meta($post->ID, 'user_access', true);
+    ?>
+    <select name="user_access[]" multiple>
+        <?php foreach ($users as $user): ?>
+            <?php /** @var WP_User $user */ ?>
+            <option value="<?= $user->ID ?>" <?= is_array($selected) && in_array($user->ID, $selected) ? 'selected' : '' ?>><?= $user->display_name ?></option>
+        <?php endforeach; ?>
+    </select>
+    <?php
+}
+
+function mp_dd_object_aliases()
 {
     global $post;
     ?>
@@ -180,17 +197,20 @@ function mp_dd_save_dd_object_meta($post_id, $post)
         return $post_id;
     }
     if (isset($_POST['display_parent'])) {
-        update_post_meta($post->ID, 'display_parent', 'yes');
-    } else {
-        update_post_meta($post->ID, 'display_parent', 'no');
+        update_post_meta($post->ID, 'display_parent', $_POST['display_parent']);
     }
-    update_post_meta($post->ID, 'display_parent_header', $_POST['display_parent_header']);
+    if (isset($_POST['display_parent_header'])) {
+        update_post_meta($post->ID, 'display_parent_header', $_POST['display_parent_header']);
+    }
     if (isset($_POST['display_children'])) {
-        update_post_meta($post->ID, 'display_children', 'yes');
-    } else {
-        update_post_meta($post->ID, 'display_children', 'no');
+        update_post_meta($post->ID, 'display_children', $_POST['display_children']);
     }
-    update_post_meta($post->ID, 'display_children_header', $_POST['display_children_header']);
+    if (isset($_POST['display_children_header'])) {
+        update_post_meta($post->ID, 'display_children_header', $_POST['display_children_header']);
+    }
+    if (isset($_POST['user_access'])) {
+        update_post_meta($post->ID, 'user_access', $_POST['user_access']);
+    }
     if (isset($_POST['aliases'])) {
 
         $aliases = !empty($_POST['aliases']) ? explode(',', $_POST['aliases']) : array();
@@ -230,7 +250,7 @@ function mp_dd_get_available_tags($include_aliases = false)
     global $wpdb;
     /** @noinspection PhpIncludeInspection */
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    $used_tags = array();
+    $used_tags     = array();
     $existing_tags = $wpdb->get_results("SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'dd_object'");
     foreach ($existing_tags as $alias) {
         $used_tags[$alias->ID] = strtolower($alias->post_title);
@@ -340,7 +360,7 @@ function mp_dd_include_custom_dd_object_filter_fields()
     <?php
 }
 
-add_action('admin_init', 'mp_dd_include_custom_dd_object_filter_fields');
+//add_action('admin_init', 'mp_dd_include_custom_dd_object_filter_fields');
 
 function mp_dd_custom_dd_object_filters($query)
 {
@@ -405,4 +425,4 @@ function mp_dd_custom_dd_object_filters($query)
     return $query;
 }
 
-add_filter('pre_user_query', 'mp_dd_custom_dd_object_filters');
+//add_filter('pre_user_query', 'mp_dd_custom_dd_object_filters');
