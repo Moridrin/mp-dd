@@ -44,6 +44,7 @@ class Item
         ?>
         <table id="items-placeholder" class="wp-list-table widefat fixed striped vertical-center" style="width: auto"></table>
         <select id="new_item_select" onchange="mp_ssv_add_new_custom_field()">
+            <option>[Add Item]</option>
             <?php foreach (self::TYPES as $key => $name): ?>
                 <option value="<?= $key ?>"><?= $name ?></option>
             <?php endforeach; ?>
@@ -53,6 +54,7 @@ class Item
             function mp_ssv_add_new_custom_field() {
                 var newType = document.getElementById('new_item_select');
                 var type = newType.options[newType.selectedIndex].value;
+                newType.getElementsByTagName('option')[0].selected = "selected";
                 mp_dd_add_new_item(type, i);
                 i++;
             }

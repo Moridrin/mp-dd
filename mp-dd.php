@@ -224,3 +224,10 @@ function mp_dd_custom_admin_css()
 }
 
 add_action('admin_head', 'mp_dd_custom_admin_css');
+
+function mp_dd_admin_scripts()
+{
+    wp_enqueue_script('mp-dd-item-selector', plugins_url() . '/' . plugin_basename(__DIR__) . '/js/mp-dd-item-selector.js', array('jquery'));
+}
+
+add_action('admin_enqueue_scripts', 'mp_dd_admin_scripts');
