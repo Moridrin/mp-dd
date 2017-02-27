@@ -6,6 +6,9 @@
  * Date: 27-2-17
  * Time: 16:06
  */
+require_once 'items/Weapon.php';
+require_once 'items/Armor.php';
+
 class Item
 {
     const TYPES
@@ -19,30 +22,48 @@ class Item
             'magical_item' => 'Magical Item',
         );
 
-    private $name;
-    private $weight;
-    private $description;
+    public $title;
+    public $type;
 
-    public function __construct($name, $weight, $description)
+    protected function __construct($title, $type)
     {
-        $this->name        = $name;
-        $this->weight      = $weight;
-        $this->description = $description;
+        $this->title = $title;
+        $this->type  = $type;
     }
 
-    /**
-     * @return string HTML with the editor for this item.
-     */
-    public function getEditor()
+    public static function fromPOST($index)
     {
-        return 'test';
+        $type = $_POST['item_' . $index . '_type'];
+        switch ($type) {
+            case Weapon::TYPE:
+                return Weapon::fromPOST($index);
+                break;
+            case Armor::TYPE:
+                return Armor::fromPOST($index);
+                break;
+        }
+        return null;
+    }
+
+    private static function fromObject($object)
+    {
+        switch ($object->type) {
+            case Weapon::TYPE:
+                return Weapon::fromObject($object);
+                break;
+            case Armor::TYPE:
+                return Armor::fromObject($object);
+                break;
+        }
     }
 
     public static function getItemsEditor($items)
     {
         ob_start();
         ?>
-        <table id="items-placeholder" class="wp-list-table widefat fixed striped vertical-center" style="width: auto"></table>
+        <table class="wp-list-table widefat fixed striped vertical-center" style="width: auto">
+            <tbody id="items-placeholder"></tbody>
+        </table>
         <select id="new_item_select" onchange="mp_ssv_add_new_custom_field()">
             <option>[Add Item]</option>
             <?php foreach (self::TYPES as $key => $name): ?>
@@ -58,8 +79,23 @@ class Item
                 mp_dd_add_new_item(type, i);
                 i++;
             }
+            <?php foreach($items as $key => $item): ?>
+            <?php $item = Item::fromObject($item); ?>
+            mp_dd_add_new_item('<?= $item->type ?>', <?= $key ?>, <?= $item->getJSON() ?>);
+            <?php endforeach; ?>
         </script>
         <?php
         return ob_get_clean();
     }
+
+    #region getJSON()
+    /**
+     * @return string json string with the encoded object vars.
+     */
+    public function getJSON()
+    {
+        return json_encode(get_object_vars($this));
+    }
+
+    #endregion
 }

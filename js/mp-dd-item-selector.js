@@ -28,7 +28,7 @@ function getWeapon(id, values) {
     var title = '';
     var type = 'weapon';
     var martial = false;
-    var dice = '';
+    var damage = '';
     var damageType = '';
     var properties = '';
     if (typeof values['title'] !== 'undefined') {
@@ -37,8 +37,8 @@ function getWeapon(id, values) {
     if (typeof values['martial'] !== 'undefined') {
         martial = values['martial'];
     }
-    if (typeof values['dice'] !== 'undefined') {
-        dice = values['dice'];
+    if (typeof values['damage'] !== 'undefined') {
+        damage = values['damage'];
     }
     if (typeof values['damage_type'] !== 'undefined') {
         damageType = values['damage_type'];
@@ -49,8 +49,32 @@ function getWeapon(id, values) {
 
     var tr = getBaseFields(id, title, type);
     tr.appendChild(getCheckboxTD('martial', id, martial));
-    tr.appendChild(getDamageTD(id, dice, damageType));
+    tr.appendChild(getDamageTD(id, damage, damageType));
     tr.appendChild(getTextInputTD('properties', id, properties));
+    container.appendChild(tr);
+}
+
+function getArmor(id, values) {
+    var container = document.getElementById("items-placeholder");
+
+    var title = '';
+    var type = 'armor';
+    var armorClass = '';
+    var properties = '';
+    if (typeof values['title'] !== 'undefined') {
+        title = values['title'];
+    }
+    if (typeof values['armorClass'] !== 'undefined') {
+        armorClass = values['armorClass'];
+    }
+    if (typeof values['properties'] !== 'undefined') {
+        properties = values['properties'];
+    }
+
+    var tr = getBaseFields(id, title, type);
+    tr.appendChild(getTextInputTD('armor_class', id, armorClass));
+    tr.appendChild(getTextInputTD('properties', id, properties));
+    tr.appendChild(getEmpty(id));
     container.appendChild(tr);
 }
 
@@ -106,9 +130,9 @@ function getBR() {
     return br.childNodes[0];
 }
 
-function getEmpty(fieldID) {
+function getEmpty(id) {
     var td = document.createElement("td");
-    td.setAttribute("class", fieldID + "_empty_td");
+    td.setAttribute("class", id + "_empty_td");
     return td;
 }
 
@@ -147,22 +171,22 @@ function getTypeTD(id, typeValue) {
     return td;
 }
 
-function getDamageTD(id, diceValue, typeValue) {
-    var dice = document.createElement("input");
-    dice.setAttribute("id", id + "_dice");
-    dice.setAttribute("name", "item_" + id + "_dice");
-    dice.setAttribute("value", diceValue);
-    dice.setAttribute("style", "width: 75px");
+function getDamageTD(id, damageValue, typeValue) {
+    var damage = document.createElement("input");
+    damage.setAttribute("id", id + "_damage");
+    damage.setAttribute("name", "item_" + id + "_damage");
+    damage.setAttribute("value", damageValue);
+    damage.setAttribute("style", "width: 75px");
     var type = createSelect(id, '_damage_type', ["Slashing", "Piercing", "Bludgeoning"], typeValue);
     var typeLabel = document.createElement("label");
     typeLabel.setAttribute("style", "white-space: nowrap;");
-    typeLabel.setAttribute("for", id + "_dice");
+    typeLabel.setAttribute("for", id + "_damage");
     typeLabel.innerHTML = "Damage";
     var td = document.createElement("td");
     td.setAttribute("id", id + "_damage_td");
     td.appendChild(typeLabel);
     td.appendChild(getBR());
-    td.appendChild(dice);
+    td.appendChild(damage);
     td.appendChild(type);
     return td;
 }
@@ -172,8 +196,9 @@ function typeChanged(id) {
     var type = document.getElementById(id + "_type").value.toLowerCase();
     removeField(document.getElementById(id + "_martial_td"));
     removeField(document.getElementById(id + "_damage_td"));
+    removeField(document.getElementById(id + "_armor_class_td"));
     removeField(document.getElementById(id + "_properties_td"));
-    // removeFields(document.getElementsByClassName(id + "_empty_td"));
+    removeFields(document.getElementsByClassName(id + "_empty_td"));
     switch (type) {
         case 'weapon':
             tr.appendChild(getCheckboxTD('martial', id, false));
@@ -181,6 +206,9 @@ function typeChanged(id) {
             tr.appendChild(getTextInputTD('properties', id, ''));
             break;
         case 'armor':
+            tr.appendChild(getTextInputTD('armor_class', id, ''));
+            tr.appendChild(getTextInputTD('properties', id, ''));
+            tr.appendChild(getEmpty(id));
             break;
         case 'gear':
             break;
@@ -210,6 +238,7 @@ function removeField(field) {
 }
 
 function toTitleCase(str) {
+    str = str.replace('_', ' ');
     return str.replace(/\w\S*/g, function (txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });

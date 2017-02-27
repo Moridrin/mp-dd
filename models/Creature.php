@@ -135,6 +135,15 @@ class Creature
                 $creature->$var = $_POST[$var];
             }
         }
+        $index = 0;
+        while (isset($_POST['item_' . $index . '_title'])) {
+            if (empty($_POST['item_' . $index . '_title'])) {
+                $index++;
+                continue;
+            }
+            $creature->items[] = Item::fromPOST($index);
+            $index++;
+        }
         return $creature;
     }
     #endregion
