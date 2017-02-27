@@ -12,9 +12,11 @@
 ini_set('display_startup_errors', 1);
 ini_set('display_errors', 1);
 error_reporting(-1);
+require_once 'functions.php';
 require_once 'all-content-filter.php';
-require_once 'models/TimelineEvent.php';
 require_once 'custom-types/creature/creature-post-type.php';
+require_once 'models/Creature.php';
+//require_once 'models/TimelineEvent.php';
 //require_once 'custom-types/timeline-event-post-type.php';
 //require_once 'custom-types/timeline-event-content.php';
 //require_once 'custom-types/dd-object-post-type.php';

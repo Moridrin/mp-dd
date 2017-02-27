@@ -150,7 +150,9 @@ function mp_creature_aliases()
 
 function mp_creature_stats()
 {
-    require_once 'stats.phtml';
+    global $post;
+    $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
+    echo $creature->getStatsEditor();
 }
 
 /**
@@ -192,6 +194,8 @@ function mp_dd_save_creature_meta($post_id, $post)
         }
         update_post_meta($post->ID, 'aliases', implode(',', $correct_aliases));
     }
+    $creature = Creature::fromPOST();
+    update_post_meta($post->ID, 'creature', $creature->getJSON());
     return $post_id;
 }
 
