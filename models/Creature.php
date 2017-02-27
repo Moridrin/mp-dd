@@ -8,6 +8,48 @@
  */
 class Creature
 {
+    #region Constants
+    const STATS
+        = array(
+            'strength'     => array(
+                'strengthSavingThrow',
+                'athletics',
+            ),
+            'dexterity'    => array(
+                'dexteritySavingThrow',
+                'acrobatics',
+                'sleightOfHand',
+                'stealth',
+            ),
+            'constitution' => array(
+                'constitutionSavingThrow',
+            ),
+            'intelligence' => array(
+                'intelligenceSavingThrow',
+                'arcana',
+                'history',
+                'investigation',
+                'nature',
+                'religion',
+            ),
+            'wisdom'       => array(
+                'wisdomSavingThrow',
+                'animalHandling',
+                'insight',
+                'medicine',
+                'perception',
+                'survival',
+            ),
+            'charisma'     => array(
+                'charismaSavingThrow',
+                'deception',
+                'intimidation',
+                'performance',
+                'persuasion',
+            ),
+        );
+    #endregion
+
     private $proficiency = 2;
 
     #region Stats
@@ -48,45 +90,8 @@ class Creature
     private $persuasion = false;
     #endregion
 
-    private static $stats
-        = array(
-            'strength'     => array(
-                'strengthSavingThrow',
-                'athletics',
-            ),
-            'dexterity'    => array(
-                'dexteritySavingThrow',
-                'acrobatics',
-                'sleightOfHand',
-                'stealth',
-            ),
-            'constitution' => array(
-                'constitutionSavingThrow',
-            ),
-            'intelligence' => array(
-                'intelligenceSavingThrow',
-                'arcana',
-                'history',
-                'investigation',
-                'nature',
-                'religion',
-            ),
-            'wisdom'       => array(
-                'wisdomSavingThrow',
-                'animalHandling',
-                'insight',
-                'medicine',
-                'perception',
-                'survival',
-            ),
-            'charisma'     => array(
-                'charismaSavingThrow',
-                'deception',
-                'intimidation',
-                'performance',
-                'persuasion',
-            ),
-        );
+    /** @var Item[] $items */
+    public $items = array();
 
     #region getByID($id)
     /**
@@ -147,7 +152,7 @@ class Creature
                 <th><label for="proficiency">Proficiency</label></th>
                 <td colspan="3"><input id="proficiency" type="number" name="proficiency" value="<?= $this->proficiency ?>"></td>
             </tr>
-            <?php foreach (self::$stats as $stat => $skills): ?>
+            <?php foreach (self::STATS as $stat => $skills): ?>
                 <tr>
                     <th><label for="stat_<?= $stat ?>"><?= ucwords(str_replace('_', ' ', $stat)) ?></label></th>
                     <td><input id="stat_<?= $stat ?>" type="number" name="<?= $stat ?>" value="<?= $this->$stat ?>"/></td>
@@ -171,7 +176,7 @@ class Creature
             jQuery(function ($) {
                 var proficiencyField = $('#proficiency');
                 var proficiency = parseInt(proficiencyField.val());
-                var stats = <?= json_encode(self::$stats) ?>;
+                var stats = <?= json_encode(self::STATS) ?>;
                 var statsTable = $("#stats_table");
                 statsTable.find(':input[type="number"]').on('input', function () {
                     var stat = $(this).attr('id');
@@ -229,5 +234,6 @@ class Creature
     {
         return json_encode(get_object_vars($this));
     }
+
     #endregion
 }

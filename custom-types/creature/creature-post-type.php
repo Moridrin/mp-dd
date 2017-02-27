@@ -71,13 +71,28 @@ add_action('init', 'mp_dd_register_creatures_taxonomy');
 
 function mp_dd_add_creature_meta_boxes()
 {
-    add_meta_box('mp_creature_aliases', 'Aliases', 'mp_creature_aliases', 'creature', 'side', 'default');
-    add_meta_box('mp_creature_stats', 'Stats', 'mp_creature_stats', 'creature', 'advanced', 'default');
+    add_meta_box('mp_creature_stats', 'Stats', 'mp_dd_creature_stats', 'creature', 'advanced', 'default');
+    add_meta_box('mp_creature_items', 'Items', 'mp_dd_creature_items', 'creature', 'advanced', 'default');
+    add_meta_box('mp_creature_aliases', 'Aliases', 'mp_dd_creature_aliases', 'creature', 'side', 'default');
 }
 
 add_action('add_meta_boxes', 'mp_dd_add_creature_meta_boxes');
 
-function mp_creature_aliases()
+function mp_dd_creature_stats()
+{
+    global $post;
+    $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
+    echo $creature->getStatsEditor();
+}
+
+function mp_dd_creature_items()
+{
+    global $post;
+    $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
+    echo Item::getItemsEditor($creature->items);
+}
+
+function mp_dd_creature_aliases()
 {
     global $post;
     ?>
@@ -146,13 +161,6 @@ function mp_creature_aliases()
         }
     </script>
     <?php
-}
-
-function mp_creature_stats()
-{
-    global $post;
-    $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
-    echo $creature->getStatsEditor();
 }
 
 /**
