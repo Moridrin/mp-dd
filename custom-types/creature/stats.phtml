@@ -1,0 +1,108 @@
+<?php $stats = array(
+    'strength'     => array(
+        'strength_saving_throw',
+        'athletics',
+    ),
+    'dexterity'    => array(
+        'dexterity_saving_throw',
+        'acrobatics',
+        'sleight_of_hand',
+        'stealth',
+    ),
+    'constitution' => array(
+        'constitution_saving_throw',
+    ),
+    'intelligence' => array(
+        'intelligence_saving_throw',
+        'arcana',
+        'history',
+        'investigation',
+        'nature',
+        'religion',
+    ),
+    'wisdom'       => array(
+        'wisdom_saving_throw',
+        'animal_handling',
+        'insight',
+        'medicine',
+        'perception',
+        'survival',
+    ),
+    'charisma'     => array(
+        'charisma_saving_throw',
+        'deception',
+        'intimidation',
+        'performance',
+        'persuasion',
+    ),
+);
+?>
+<table id="stats_table" class="wp-list-table widefat fixed striped vertical-center" style="width: auto">
+    <tr>
+        <th><label for="proficiency">Proficiency</label></th>
+        <td><input id="proficiency" type="number" name="proficiency" value="2"></td>
+    </tr>
+    <?php foreach ($stats as $stat => $skills): ?>
+        <tr>
+            <th><label for="stat_<?= $stat ?>"><?= ucwords(str_replace('_', ' ', $stat)) ?></label></th>
+            <td><input id="stat_<?= $stat ?>" type="number" name="<?= $stat ?>" value="10"/></td>
+            <td id="stat_<?= $stat ?>_modifier">+0</td>
+            <td>
+                <table>
+                    <?php foreach ($skills as $skill): ?>
+                        <tr>
+                            <th><label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', $skill)) ?></label></th>
+                            <td><input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>"/></td>
+                            <td id="skill_<?= $skill ?>_modifier">+0</td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</table>
+
+<script>
+    jQuery(function ($) {
+        var proficiency = 2;
+        var stats = <?= json_encode($stats) ?>;
+        var statsTable = $("#stats_table");
+        statsTable.find(':input[type="number"]').on('input', function () {
+            var stat = $(this).attr('id');
+            stat = stat.replace('stat_', '');
+            mp_dd_update_stats(stat);
+        });
+        statsTable.find(':input[type="checkbox"]').change(function () {
+            var stat = $(this).data('stat');
+            mp_dd_update_stats(stat);
+        });
+        $('#proficiency').on('input', function () {
+            proficiency = parseInt($(this).val());
+            $.each(stats, function (stat, skills) {
+                mp_dd_update_stats(stat);
+            })
+        });
+
+        function mp_dd_update_stats(stat) {
+            var statModifier = Math.floor(($('#stat_' + stat).val() - 10) / 2);
+            if (statModifier >= 0) {
+                $('#stat_' + stat + '_modifier').html('+' + statModifier);
+            } else {
+                $('#stat_' + stat + '_modifier').html(statModifier);
+            }
+
+            var skills = stats[stat];
+            $.each(skills, function (index, skill) {
+                var skillModifier = statModifier;
+                if ($('#skill_' + skill).is(':checked')) {
+                    skillModifier += proficiency;
+                }
+                if (statModifier >= 0) {
+                    $('#skill_' + skill + '_modifier').html('+' + skillModifier);
+                } else {
+                    $('#skill_' + skill + '_modifier').html(skillModifier);
+                }
+            });
+        }
+    });
+</script>

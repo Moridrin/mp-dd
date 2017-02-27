@@ -12,13 +12,13 @@
 ini_set('display_startup_errors', 1);
 ini_set('display_errors', 1);
 error_reporting(-1);
-require_once 'mp-general/general.php';
 require_once 'all-content-filter.php';
 require_once 'models/TimelineEvent.php';
-require_once 'custom-types/timeline-event-post-type.php';
-require_once 'custom-types/timeline-event-content.php';
-require_once 'custom-types/dd-object-post-type.php';
-require_once 'custom-types/dd-object-content.php';
+require_once 'custom-types/creature/creature-post-type.php';
+//require_once 'custom-types/timeline-event-post-type.php';
+//require_once 'custom-types/timeline-event-content.php';
+//require_once 'custom-types/dd-object-post-type.php';
+//require_once 'custom-types/dd-object-content.php';
 
 function mp_dd_register_mp_dd()
 {
@@ -207,3 +207,16 @@ function mp_dd_custom_column_values($column, $post_id)
 }
 
 add_action('manage_timeline_event_posts_custom_column', 'mp_dd_custom_column_values', 10, 2);
+
+function mp_dd_custom_admin_css()
+{
+    ?>
+    <style>
+        table.vertical-center td {
+            vertical-align: middle;
+        }
+    </style>
+    <?php
+}
+
+add_action('admin_head', 'mp_dd_custom_admin_css');
