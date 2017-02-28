@@ -13,22 +13,20 @@ class Item
 {
     const TYPES
         = array(
-            'weapon'       => 'Weapon',
-            'armor'        => 'Armor',
-            'gear'         => 'Gear',
-            'tool'         => 'Tool',
-            'ammunition'   => 'Ammunition',
-            'mount'        => 'Mount',
-            'magical_item' => 'Magical Item',
+            'general' => 'General',
+            'weapon'  => 'Weapon',
+            'armor'   => 'Armor',
         );
 
     public $title;
     public $type;
+    public $description;
 
-    protected function __construct($title, $type)
+    protected function __construct($title, $type, $description = '')
     {
-        $this->title = $title;
-        $this->type  = $type;
+        $this->title       = $title;
+        $this->type        = $type;
+        $this->description = $description;
     }
 
     public static function fromPOST($index)
@@ -41,8 +39,11 @@ class Item
             case Armor::TYPE:
                 return Armor::fromPOST($index);
                 break;
+            default:
+                $title       = $_POST['item_' . $index . '_title'];
+                $description = isset($_POST['item_' . $index . '_description']) ? $_POST['item_' . $index . '_description'] : '';
+                return new Item($title, $type, $description);
         }
-        return null;
     }
 
     private static function fromObject($object)
@@ -53,6 +54,9 @@ class Item
                 break;
             case Armor::TYPE:
                 return Armor::fromObject($object);
+                break;
+            default:
+                return new Item($object->title, $object->type, $object->description);
                 break;
         }
     }

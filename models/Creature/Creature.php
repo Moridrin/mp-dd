@@ -50,9 +50,12 @@ class Creature
         );
     #endregion
 
-    private $proficiency = 2;
-
     #region Stats
+    private $proficiency = 2;
+    private $armorClass;
+    private $hitPoints;
+    private $speed;
+
     private $strength = 10;
     private $strengthSavingThrow = false;
     private $athletics = false;
@@ -92,6 +95,9 @@ class Creature
 
     /** @var Item[] $items */
     public $items = array();
+
+    /** @var string[] $properties */
+    public $properties = array();
 
     #region getByID($id)
     /**
@@ -144,6 +150,17 @@ class Creature
             $creature->items[] = Item::fromPOST($index);
             $index++;
         }
+        $index = 0;
+        while (isset($_POST['property_' . $index . '_title'])) {
+            if (empty($_POST['property_' . $index . '_title'])) {
+                $index++;
+                continue;
+            }
+            if (isset($_POST['property_' . $index . '_description'])) {
+                $creature->properties[$_POST['property_' . $index . '_title']] = str_replace(PHP_EOL, '<br/>', $_POST['property_' . $index . '_description']);
+            }
+            $index++;
+        }
         return $creature;
     }
     #endregion
@@ -160,6 +177,18 @@ class Creature
             <tr>
                 <th><label for="proficiency">Proficiency</label></th>
                 <td colspan="3"><input id="proficiency" type="number" name="proficiency" value="<?= $this->proficiency ?>"></td>
+            </tr>
+            <tr>
+                <th><label for="armorClass">Armor Class</label></th>
+                <td colspan="3"><input id="armorClass" type="text" name="armorClass" value="<?= $this->armorClass ?>"></td>
+            </tr>
+            <tr>
+                <th><label for="hitPoints">Hit Points</label></th>
+                <td colspan="3"><input id="hitPoints" type="text" name="hitPoints" value="<?= $this->hitPoints ?>"></td>
+            </tr>
+            <tr>
+                <th><label for="speed">Speed</label></th>
+                <td colspan="3"><input id="speed" type="text" name="speed" value="<?= $this->speed ?>"></td>
             </tr>
             <?php foreach (self::STATS as $stat => $skills): ?>
                 <tr>

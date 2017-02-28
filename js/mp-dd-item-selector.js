@@ -9,16 +9,8 @@ function mp_dd_add_new_item(type, id, values) {
         getWeapon(id, values);
     } else if (type == 'armor') {
         getArmor(id, values);
-    } else if (type == 'gear') {
-        getGear(id, values);
-    } else if (type == 'tool') {
-        getTool(id, values);
-    } else if (type == 'ammunition') {
-        getAmmunition(id, values);
-    } else if (type == 'mount') {
-        getMount(id, values);
-    } else if (type == 'magical_item') {
-        getMagicalItem(id, values);
+    } else {
+        getGeneralItem(id, values);
     }
 }
 
@@ -40,17 +32,17 @@ function getWeapon(id, values) {
     if (typeof values['damage'] !== 'undefined') {
         damage = values['damage'];
     }
-    if (typeof values['damage_type'] !== 'undefined') {
-        damageType = values['damage_type'];
+    if (typeof values['damageType'] !== 'undefined') {
+        damageType = values['damageType'];
     }
     if (typeof values['properties'] !== 'undefined') {
         properties = values['properties'];
     }
 
-    var tr = getBaseFields(id, title, type);
-    tr.appendChild(getCheckboxTD('martial', id, martial));
+    var tr = getItemBaseFields(id, title, type);
+    tr.appendChild(getCheckboxTD('item', 'martial', id, martial));
     tr.appendChild(getDamageTD(id, damage, damageType));
-    tr.appendChild(getTextInputTD('properties', id, properties));
+    tr.appendChild(getTextInputTD('item', 'properties', id, properties));
     container.appendChild(tr);
 }
 
@@ -71,91 +63,43 @@ function getArmor(id, values) {
         properties = values['properties'];
     }
 
-    var tr = getBaseFields(id, title, type);
-    tr.appendChild(getTextInputTD('armor_class', id, armorClass));
-    tr.appendChild(getTextInputTD('properties', id, properties));
+    var tr = getItemBaseFields(id, title, type);
+    tr.appendChild(getTextInputTD('item', 'armor_class', id, armorClass));
+    tr.appendChild(getTextInputTD('item', 'properties', id, properties));
     tr.appendChild(getEmpty(id));
     container.appendChild(tr);
 }
 
-function getBaseFields(id, title, type) {
+function getGeneralItem(id, values) {
+    var container = document.getElementById("items-placeholder");
+
+    var title = '';
+    var type = 'general';
+    var description = '';
+    if (typeof values['title'] !== 'undefined') {
+        title = values['title'];
+    }
+    if (typeof values['description'] !== 'undefined') {
+        description = values['description'];
+    }
+
+    var tr = getItemBaseFields(id, title, type);
+    tr.appendChild(getTextInputTD('item', 'description', id, description));
+    tr.appendChild(getEmpty(id));
+    tr.appendChild(getEmpty(id));
+    container.appendChild(tr);
+}
+
+function getItemBaseFields(id, title, type) {
     var tr = document.createElement("tr");
     tr.setAttribute("id", id + "_tr");
-    tr.appendChild(getTextInputTD('title', id, title));
+    tr.appendChild(getTextInputTD('item', 'title', id, title));
     tr.appendChild(getTypeTD(id, type));
     return tr;
 }
 
-function getTextInputTD(name, id, value) {
-    var field = document.createElement("input");
-    field.setAttribute("id", id + "_" + name);
-    field.setAttribute("name", "item_" + id + "_" + name);
-    field.setAttribute("style", "width: 100%;");
-    field.setAttribute("value", value);
-    var label = document.createElement("label");
-    label.setAttribute("style", "white-space: nowrap;");
-    label.setAttribute("for", id + "_" + name);
-    label.innerHTML = toTitleCase(name);
-    var td = document.createElement("td");
-    td.setAttribute("id", id + "_" + name + "_td");
-    td.appendChild(label);
-    td.appendChild(getBR());
-    td.appendChild(field);
-    return td;
-}
-
-function getCheckboxTD(name, id, checked) {
-    var field = document.createElement("input");
-    field.setAttribute("id", id + "_" + name);
-    field.setAttribute("type", "checkbox");
-    field.setAttribute("name", "item_" + id + "_" + name);
-    if (checked) {
-        field.setAttribute("checked", "checked");
-    }
-    var label = document.createElement("label");
-    label.setAttribute("style", "white-space: nowrap;");
-    label.setAttribute("for", id + "_" + name);
-    label.innerHTML = toTitleCase(name);
-    var td = document.createElement("td");
-    td.setAttribute("id", id + "_" + name + "_td");
-    td.appendChild(label);
-    td.appendChild(getBR());
-    td.appendChild(field);
-    return td;
-}
-
-function getBR() {
-    var br = document.createElement("div");
-    br.innerHTML = '<br/>';
-    return br.childNodes[0];
-}
-
-function getEmpty(id) {
-    var td = document.createElement("td");
-    td.setAttribute("class", id + "_empty_td");
-    return td;
-}
-
-function createSelect(id, extension, options, selected) {
-    var select = document.createElement("select");
-    select.setAttribute("id", id + extension);
-    select.setAttribute("name", "item_" + id + extension);
-
-    for (var i = 0; i < options.length; i++) {
-        var option = document.createElement("option");
-        option.setAttribute("value", options[i].toLowerCase());
-        if (options[i].toLowerCase() == selected) {
-            option.setAttribute("selected", "selected");
-        }
-        option.innerHTML = options[i];
-        select.appendChild(option);
-    }
-
-    return select;
-}
-
 function getTypeTD(id, typeValue) {
-    var type = createSelect(id, '_type', ["Weapon", "Armor", "Gear", "Tool", "Ammunition", "Mount", "Magical Item"], typeValue);
+    var type = createSelect('item', id, '_type', ["General", "Weapon", "Armor"], typeValue);
     type.onchange = function () {
         typeChanged(id);
     };
@@ -177,7 +121,7 @@ function getDamageTD(id, damageValue, typeValue) {
     damage.setAttribute("name", "item_" + id + "_damage");
     damage.setAttribute("value", damageValue);
     damage.setAttribute("style", "width: 75px");
-    var type = createSelect(id, '_damage_type', ["Slashing", "Piercing", "Bludgeoning"], typeValue);
+    var type = createSelect('item', id, '_damage_type', ["Slashing", "Piercing", "Bludgeoning"], typeValue);
     var typeLabel = document.createElement("label");
     typeLabel.setAttribute("style", "white-space: nowrap;");
     typeLabel.setAttribute("for", id + "_damage");
@@ -194,6 +138,7 @@ function getDamageTD(id, damageValue, typeValue) {
 function typeChanged(id) {
     var tr = document.getElementById(id + "_tr");
     var type = document.getElementById(id + "_type").value.toLowerCase();
+    removeField(document.getElementById(id + "_description_td"));
     removeField(document.getElementById(id + "_martial_td"));
     removeField(document.getElementById(id + "_damage_td"));
     removeField(document.getElementById(id + "_armor_class_td"));
@@ -201,24 +146,19 @@ function typeChanged(id) {
     removeFields(document.getElementsByClassName(id + "_empty_td"));
     switch (type) {
         case 'weapon':
-            tr.appendChild(getCheckboxTD('martial', id, false));
+            tr.appendChild(getCheckboxTD('item', 'martial', id, false));
             tr.appendChild(getDamageTD(id, '', ''));
-            tr.appendChild(getTextInputTD('properties', id, ''));
+            tr.appendChild(getTextInputTD('item', 'properties', id, ''));
             break;
         case 'armor':
-            tr.appendChild(getTextInputTD('armor_class', id, ''));
-            tr.appendChild(getTextInputTD('properties', id, ''));
+            tr.appendChild(getTextInputTD('item', 'armor_class', id, ''));
+            tr.appendChild(getTextInputTD('item', 'properties', id, ''));
             tr.appendChild(getEmpty(id));
             break;
-        case 'gear':
-            break;
-        case 'tool':
-            break;
-        case 'ammunition':
-            break;
-        case 'mount':
-            break;
-        case 'magical_item':
+        default:
+            tr.appendChild(getTextInputTD('item', 'description', id, ''));
+            tr.appendChild(getEmpty(id));
+            tr.appendChild(getEmpty(id));
             break;
     }
 }

@@ -71,9 +71,10 @@ add_action('init', 'mp_dd_register_creatures_taxonomy');
 
 function mp_dd_add_creature_meta_boxes()
 {
-    add_meta_box('mp_creature_stats', 'Stats', 'mp_dd_creature_stats', 'creature', 'advanced', 'default');
-    add_meta_box('mp_creature_items', 'Items', 'mp_dd_creature_items', 'creature', 'advanced', 'default');
-    add_meta_box('mp_creature_aliases', 'Aliases', 'mp_dd_creature_aliases', 'creature', 'side', 'default');
+    add_meta_box('mp_dd_creature_stats', 'Stats', 'mp_dd_creature_stats', 'creature', 'advanced', 'default');
+    add_meta_box('mp_dd_creature_items', 'Items', 'mp_dd_creature_items', 'creature', 'advanced', 'default');
+    add_meta_box('mp_dd_creature_properties', 'Properties', 'mp_dd_creature_properties', 'creature', 'advanced', 'default');
+    add_meta_box('mp_dd_creature_aliases', 'Aliases', 'mp_dd_creature_aliases', 'creature', 'side', 'default');
 }
 
 add_action('add_meta_boxes', 'mp_dd_add_creature_meta_boxes');
@@ -90,6 +91,38 @@ function mp_dd_creature_items()
     global $post;
     $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
     echo Item::getItemsEditor($creature->items);
+}
+
+function mp_dd_creature_properties()
+{
+    global $post;
+    $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
+    ?>
+    <table class="wp-list-table widefat fixed striped vertical-center">
+        <tbody id="properties-placeholder"></tbody>
+    </table>
+    <button onclick="mp_dd_add_new_property(event)">Add Property</button>
+    <script>
+        var index = 0;
+        function mp_dd_add_new_property(event) {
+            event.preventDefault();
+            mp_dd_add_property(index, '', '');
+            index++;
+        }
+        function mp_dd_add_property(id, title, description) {
+            var container = document.getElementById("properties-placeholder");
+            var tr = document.createElement("tr");
+            tr.setAttribute("id", id + "_tr");
+            tr.appendChild(getTextInputTD('property', 'title', id, title));
+            tr.appendChild(getTextAreaTD('property', 'description', id, description));
+            container.appendChild(tr);
+        }
+        <?php foreach($creature->properties as $title => $description): ?>
+            mp_dd_add_property(index, '<?= $title ?>', '<?= str_replace('<br/>', '\n', $description) ?>');
+            index++;
+        <?php endforeach; ?>
+    </script>
+    <?php
 }
 
 function mp_dd_creature_aliases()
@@ -166,8 +199,15 @@ function mp_dd_creature_aliases()
 /**
  * @param $post_id
  * @param $post
- *
- * @return int the post_id
+
+
+
+
+
+
+
+*
+*@return int the post_id
  */
 function mp_dd_save_creature_meta($post_id, $post)
 {

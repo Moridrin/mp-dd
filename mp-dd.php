@@ -16,8 +16,8 @@ require_once 'functions.php';
 require_once 'all-content-filter.php';
 require_once 'custom-types/creature/creature-post-type.php';
 
-require_once 'models/Creature.php';
-require_once 'models/Item.php';
+require_once 'models/Creature/Creature.php';
+require_once 'models/Creature/Item.php';
 //require_once 'models/TimelineEvent.php';
 //require_once 'custom-types/timeline-event-post-type.php';
 //require_once 'custom-types/timeline-event-content.php';
@@ -227,6 +227,7 @@ add_action('admin_head', 'mp_dd_custom_admin_css');
 
 function mp_dd_admin_scripts()
 {
+    wp_enqueue_script('mp-dd-html-creator', plugins_url() . '/' . plugin_basename(__DIR__) . '/js/mp-dd-html-creator.js', array('jquery'));
     wp_enqueue_script('mp-dd-item-selector', plugins_url() . '/' . plugin_basename(__DIR__) . '/js/mp-dd-item-selector.js', array('jquery'));
 }
 
