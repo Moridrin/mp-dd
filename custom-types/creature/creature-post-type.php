@@ -6,7 +6,7 @@
  * Time: 20:21
  */
 
-function mp_dd_register_creatures_post_category()
+function mp_dd_register_creatures_post_type()
 {
 
     $labels = array(
@@ -48,7 +48,7 @@ function mp_dd_register_creatures_post_category()
     register_post_type('creature', $args);
 }
 
-add_action('init', 'mp_dd_register_creatures_post_category');
+add_action('init', 'mp_dd_register_creatures_post_type');
 
 function mp_dd_register_creatures_taxonomy()
 {
@@ -247,7 +247,7 @@ function mp_dd_save_creature_meta($post_id, $post)
     return $post_id;
 }
 
-add_action('save_post', 'mp_dd_save_creature_meta', 1, 2);
+add_action('save_post_creature', 'mp_dd_save_creature_meta', 1, 2);
 
 function mp_dd_get_available_tags($include_aliases = false)
 {

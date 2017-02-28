@@ -6,7 +6,7 @@
  * Date: 27-2-17
  * Time: 7:56
  */
-class Creature
+class Creature extends EmbeddedObject implements EmbeddedObjectInterface
 {
     #region Constants
     const STATS
@@ -50,83 +50,55 @@ class Creature
         );
     #endregion
 
+    #region Variables
     #region Stats
-    private $proficiency = 2;
-    private $armorClass;
-    private $hitPoints;
-    private $speed;
+    protected $proficiency = 2;
+    protected $armorClass;
+    protected $hitPoints;
+    protected $speed;
 
-    private $strength = 10;
-    private $strengthSavingThrow = false;
-    private $athletics = false;
+    protected $strength = 10;
+    protected $strengthSavingThrow = false;
+    protected $athletics = false;
 
-    private $dexterity = 10;
-    private $dexteritySavingThrow = false;
-    private $acrobatics = false;
-    private $sleightOfHand = false;
-    private $stealth = false;
+    protected $dexterity = 10;
+    protected $dexteritySavingThrow = false;
+    protected $acrobatics = false;
+    protected $sleightOfHand = false;
+    protected $stealth = false;
 
-    private $constitution = 10;
-    private $constitutionSavingThrow = false;
+    protected $constitution = 10;
+    protected $constitutionSavingThrow = false;
 
-    private $intelligence = 10;
-    private $intelligenceSavingThrow = false;
-    private $arcana = false;
-    private $history = false;
-    private $investigation = false;
-    private $nature = false;
-    private $religion = false;
+    protected $intelligence = 10;
+    protected $intelligenceSavingThrow = false;
+    protected $arcana = false;
+    protected $history = false;
+    protected $investigation = false;
+    protected $nature = false;
+    protected $religion = false;
 
-    private $wisdom = 10;
-    private $wisdomSavingThrow = false;
-    private $animalHandling = false;
-    private $insight = false;
-    private $medicine = false;
-    private $perception = false;
-    private $survival = false;
+    protected $wisdom = 10;
+    protected $wisdomSavingThrow = false;
+    protected $animalHandling = false;
+    protected $insight = false;
+    protected $medicine = false;
+    protected $perception = false;
+    protected $survival = false;
 
-    private $charisma = 10;
-    private $charismaSavingThrow = false;
-    private $deception = false;
-    private $intimidation = false;
-    private $performance = false;
-    private $persuasion = false;
+    protected $charisma = 10;
+    protected $charismaSavingThrow = false;
+    protected $deception = false;
+    protected $intimidation = false;
+    protected $performance = false;
+    protected $persuasion = false;
     #endregion
 
-    /** @var Item[] $items */
+    /** @var int[] $items */
     public $items = array();
 
     /** @var string[] $properties */
     public $properties = array();
-
-    #region getByID($id)
-    /**
-     * @param int $id is the post_id;
-     *
-     * @return Creature
-     */
-    public static function getByID($id)
-    {
-        $creature = new Creature();
-        return $creature;
-    }
-    #endregion
-
-    #region fromJSON($json)
-    /**
-     * @param string $json
-     *
-     * @return Creature
-     */
-    public static function fromJSON($json)
-    {
-        $objectVars = json_decode($json);
-        $creature   = new Creature();
-        foreach ($objectVars as $var => $value) {
-            $creature->$var = $value;
-        }
-        return $creature;
-    }
     #endregion
 
     #region fromPOST()
@@ -147,7 +119,7 @@ class Creature
                 $index++;
                 continue;
             }
-            $creature->items[] = Item::fromPOST($index);
+//            $creature->items[] = Item::fromPOST($index);
             $index++;
         }
         $index = 0;
@@ -260,17 +232,6 @@ class Creature
         </script>
         <?php
         return ob_get_clean();
-    }
-
-    #endregion
-
-    #region getJSON()
-    /**
-     * @return string json string with the encoded object vars.
-     */
-    public function getJSON()
-    {
-        return json_encode(get_object_vars($this));
     }
 
     #endregion

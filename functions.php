@@ -14,6 +14,7 @@
  */
 function mp_dd_to_camel_case($string, $capitalizeFirstCharacter = false)
 {
+    $string = preg_replace('/(?<!\ )[A-Z]/', ' $0', $string);
     $string = str_replace('-', ' ', $string);
     $string = str_replace('_', ' ', $string);
     $str    = str_replace(' ', '', ucwords($string));
@@ -83,4 +84,15 @@ function mp_dd_has_circular_reference($variable)
     } else {
         return false;
     }
+}
+
+function mp_dd_sanitize($value)
+{
+    if (is_array($value)) {
+        return $value;
+    }
+    $value = stripslashes($value);
+    $value = esc_attr($value);
+    $value = sanitize_text_field($value);
+    return $value;
 }
