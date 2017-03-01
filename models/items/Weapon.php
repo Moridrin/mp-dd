@@ -10,7 +10,7 @@ class Weapon extends Item
 {
     const TYPE = 'weapon';
 
-    public $martial;
+    public $martial = false;
     public $damage;
     public $damageType;
 

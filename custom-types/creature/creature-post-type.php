@@ -82,21 +82,67 @@ add_action('add_meta_boxes', 'mp_dd_add_creature_meta_boxes');
 function mp_dd_creature_stats()
 {
     global $post;
-    $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
+    $creature = Creature::load($post->ID);
     echo $creature->getStatsEditor();
 }
 
 function mp_dd_creature_items()
 {
     global $post;
-    $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
-    echo Item::getItemsEditor($creature->items);
+    $creature = Creature::load($post->ID);
+    $args     = array('post_type' => array('item', 'weapon', 'armor'));
+    $items    = get_posts($args);
+    ?>
+    <p id="current_items"><?= $creature->getCurrentItemsList() ?></p>
+    <input type="text" id="item-selector" onkeyup="filterItems()" placeholder="Search for items.." title="Find Item">
+    <ul id="item-list">
+        <?php foreach ($items as $itemPost): ?>
+            <?php $item = Item::getByID($itemPost->ID, $itemPost->post_type); ?>
+            <?php $key = $itemPost->ID . '_' . $itemPost->post_type; ?>
+            <?php $count = array_key_exists($key, $creature->items) ? $creature->items[$key] : 0; ?>
+            <li>
+                <input
+                        type="number"
+                        name="items[<?= $itemPost->ID . '_' . $itemPost->post_type ?>]"
+                        min="0"
+                        value="<?= $count ?>"
+                        onchange="mp_dd_item_count_changed(event)"
+                        style="max-width: 50px;"
+                />
+                <?= $item ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+
+    <script>
+        function filterItems() {
+            var input, filter, ul, li, a, i;
+            input = document.getElementById("item-selector");
+            filter = input.value.toUpperCase();
+            ul = document.getElementById("item-list");
+            li = ul.getElementsByTagName("li");
+            for (i = 0; i < li.length; i++) {
+                a = li[i].getElementsByTagName("a")[0];
+                if (a.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                } else {
+                    li[i].style.display = "none";
+
+                }
+            }
+        }
+
+        function mp_dd_item_count_changed(event) {
+            event.preventDefault();
+        }
+    </script>
+    <?php
 }
 
 function mp_dd_creature_properties()
 {
     global $post;
-    $creature = Creature::fromJSON(get_post_meta($post->ID, 'creature', true));
+    $creature = Creature::load($post->ID);
     ?>
     <table class="wp-list-table widefat fixed striped vertical-center">
         <tbody id="properties-placeholder"></tbody>
@@ -118,8 +164,8 @@ function mp_dd_creature_properties()
             container.appendChild(tr);
         }
         <?php foreach($creature->properties as $title => $description): ?>
-            mp_dd_add_property(index, '<?= $title ?>', '<?= str_replace('<br/>', '\n', $description) ?>');
-            index++;
+        mp_dd_add_property(index, '<?= $title ?>', '<?= str_replace('<br/>', '\n', $description) ?>');
+        index++;
         <?php endforeach; ?>
     </script>
     <?php
@@ -199,15 +245,8 @@ function mp_dd_creature_aliases()
 /**
  * @param $post_id
  * @param $post
-
-
-
-
-
-
-
-*
-*@return int the post_id
+ *
+ * @return int the post_id
  */
 function mp_dd_save_creature_meta($post_id, $post)
 {
@@ -242,8 +281,8 @@ function mp_dd_save_creature_meta($post_id, $post)
         }
         update_post_meta($post->ID, 'aliases', implode(',', $correct_aliases));
     }
-    $creature = Creature::fromPOST();
-    update_post_meta($post->ID, 'creature', $creature->getJSON());
+    $creature = Creature::fromPOST($post_id);
+    $creature->save();
     return $post_id;
 }
 

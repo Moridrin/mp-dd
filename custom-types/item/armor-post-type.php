@@ -53,7 +53,7 @@ function mp_dd_armor_properties()
 {
     global $post;
     /** @var Armor $armor */
-    $armor = Armor::fromJSON(get_post_meta($post->ID, 'armor', true));
+    $armor = Armor::load($post->ID);
     echo $armor->getEditor();
 }
 
@@ -68,8 +68,8 @@ function mp_dd_save_armor_meta($post_id, $post)
     if (!current_user_can('edit_post', $post->ID)) {
         return $post_id;
     }
-    $armor = Armor::fromPOST();
-    update_post_meta($post->ID, 'armor', $armor->getJSON());
+    $armor = Armor::fromPOST($post_id);
+    $armor->save();
     return $post_id;
 }
 

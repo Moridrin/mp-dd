@@ -8,20 +8,29 @@
  */
 abstract class EmbeddedObject
 {
+    /** @var int $post */
+    public $postID;
+
     /**
-     * @param int $id
+     * @param int         $id
+     * @param string|null $type
      *
-     * @return EmbeddedObject
+     * @return static
      */
-    public static function getByID($id)
+    public static function getByID($id, $type = null)
     {
-        return static::fromJSON(get_post_meta($id, 'item', true));
+        $type = $type ?: static::class;
+        return static::fromJSON(get_post_meta($id, strtolower($type), true));
     }
 
     /**
-     * @return EmbeddedObject
+     * This function builds the Embedded Object from the $_POST variable.
+     *
+     * @param int $postID is the id of the post where this object is embedded in.
+     *
+     * @return static
      */
-    public static function fromPOST()
+    public static function fromPOST($postID)
     {
         $embeddedObject = new static;
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
@@ -39,33 +48,55 @@ abstract class EmbeddedObject
                     array_push($embeddedObject->$var, mp_dd_sanitize($_POST[$var . '_' . $i]));
                     $i++;
                 }
+            } elseif (is_bool($value)) {
+                $embeddedObject->$var = filter_var($_POST[$var], FILTER_VALIDATE_BOOLEAN);
             } else {
                 $embeddedObject->$var = mp_dd_sanitize($_POST[$var]);
             }
         }
+        $embeddedObject->postID = $postID;
         return $embeddedObject;
     }
 
     /**
      * @param string $json
      *
-     * @return EmbeddedObject
+     * @return static
      */
-    public static function fromJSON($json)
+    private static function fromJSON($json)
     {
         $embeddedObject = new static;
-        $objectVars     = json_decode($json);
-        foreach ($objectVars as $var => $value) {
-            $embeddedObject->$var = $value;
+        $objectVars     = json_decode($json, true);
+        if ($objectVars) {
+            foreach ($objectVars as $var => $value) {
+                $embeddedObject->$var = $value;
+            }
         }
         return $embeddedObject;
     }
 
     /**
+     * @param int $postID
+     *
+     * @return static
+     */
+    public static function load($postID)
+    {
+        $post = get_post($postID);
+        return self::fromJSON(get_post_meta($postID, $post->post_type, true));
+    }
+
+    /**
      * @return string
      */
-    public function getJSON()
+    private function getJSON()
     {
         return json_encode(get_object_vars($this));
+    }
+
+    public function save()
+    {
+        $post = get_post($this->postID);
+        update_post_meta($this->postID, $post->post_type, $this->getJSON());
     }
 }

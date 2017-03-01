@@ -6,7 +6,7 @@
  * Date: 27-2-17
  * Time: 7:56
  */
-class Creature extends EmbeddedObject implements EmbeddedObjectInterface
+class Creature extends EmbeddedObject
 {
     #region Constants
     const STATS
@@ -103,9 +103,13 @@ class Creature extends EmbeddedObject implements EmbeddedObjectInterface
 
     #region fromPOST()
     /**
+     * This function builds the Embedded Object from the $_POST variable.
+     *
+     * @param int $postID is the id of the post where this object is embedded in.
+     *
      * @return Creature|false
      */
-    public static function fromPOST()
+    public static function fromPOST($postID)
     {
         $creature = new Creature();
         foreach (get_object_vars($creature) as $var => $value) {
@@ -113,15 +117,7 @@ class Creature extends EmbeddedObject implements EmbeddedObjectInterface
                 $creature->$var = $_POST[$var];
             }
         }
-        $index = 0;
-        while (isset($_POST['item_' . $index . '_title'])) {
-            if (empty($_POST['item_' . $index . '_title'])) {
-                $index++;
-                continue;
-            }
-//            $creature->items[] = Item::fromPOST($index);
-            $index++;
-        }
+        $creature->items = $_POST['items'];
         $index = 0;
         while (isset($_POST['property_' . $index . '_title'])) {
             if (empty($_POST['property_' . $index . '_title'])) {
@@ -133,6 +129,7 @@ class Creature extends EmbeddedObject implements EmbeddedObjectInterface
             }
             $index++;
         }
+        $creature->postID = $postID;
         return $creature;
     }
     #endregion
@@ -235,4 +232,18 @@ class Creature extends EmbeddedObject implements EmbeddedObjectInterface
     }
 
     #endregion
+
+    public function getCurrentItemsList() {
+        $list = '';
+        foreach ($this->items as $key => $count) {
+            if ($count <= 0) {
+                continue;
+            }
+            $id = explode('_', $key)[0];
+            $type = explode('_', $key)[1];
+            $item = Item::getByID($id, $type);
+            $list .= $item . ' ' . $count . 'x, ';
+        }
+        return $list;
+    }
 }

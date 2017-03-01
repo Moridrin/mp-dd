@@ -21,7 +21,6 @@ require_once 'custom-types/item/weapon-post-type.php';
 require_once 'custom-types/item/armor-post-type.php';
 
 require_once 'models/EmbeddedObject.php';
-require_once 'models/EmbeddedObjectInterface.php';
 require_once 'models/Creature.php';
 require_once 'models/items/Item.php';
 

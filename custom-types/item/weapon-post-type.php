@@ -53,7 +53,7 @@ function mp_dd_weapon_properties()
 {
     global $post;
     /** @var Weapon $weapon */
-    $weapon = Weapon::fromJSON(get_post_meta($post->ID, 'weapon', true));
+    $weapon = Weapon::load($post->ID);
     echo $weapon->getEditor();
 }
 
@@ -68,8 +68,8 @@ function mp_dd_save_weapon_meta($post_id, $post)
     if (!current_user_can('edit_post', $post->ID)) {
         return $post_id;
     }
-    $weapon = Weapon::fromPOST();
-    update_post_meta($post->ID, 'weapon', $weapon->getJSON());
+    $weapon = Weapon::fromPOST($post_id);
+    $weapon->save();
     return $post_id;
 }
 

@@ -6,33 +6,14 @@
  * Date: 27-2-17
  * Time: 16:06
  */
-class Item extends EmbeddedObject implements EmbeddedObjectInterface
+class Item extends EmbeddedObject
 {
-    /** @var  string[] $properties */
+    /** @var string[] $properties */
     public $properties = array();
 
     protected function __construct()
     {
     }
-
-//    public static function fromPOST()
-//    {
-//        if (!isset($_POST['type'])) {
-//            return new Item();
-//        }
-//        $type = $_POST['type'];
-//        switch ($type) {
-//            case Weapon::TYPE:
-//                return Weapon::fromPOST();
-//                break;
-//            case Armor::TYPE:
-//                return Armor::fromPOST();
-//                break;
-//            default:
-//                return parent::fromPOST();
-//                break;
-//        }
-//    }
 
     public function getEditor()
     {
@@ -61,6 +42,9 @@ class Item extends EmbeddedObject implements EmbeddedObjectInterface
         <table class="wp-list-table widefat fixed striped vertical-center" style="width: auto">
             <tbody>
             <?php foreach (get_object_vars($this) as $var => $value): ?>
+                <?php if ($var == 'postID'): ?>
+                    <?php continue; ?>
+                <?php endif; ?>
                 <tr>
                     <th>
                         <label for="<?= $var ?>">
@@ -69,13 +53,18 @@ class Item extends EmbeddedObject implements EmbeddedObjectInterface
                     </th>
                     <td>
                         <?php if (is_array($value)): ?>
-                            <table><tbody id="<?= $var ?>-placeholder"></tbody></table>
+                            <table>
+                                <tbody id="<?= $var ?>-placeholder"></tbody>
+                            </table>
                             <button onclick="mp_dd_add_new_list_item(event)" data-group="<?= $var ?>">Add <?= mp_dd_to_camel_case($var, true) ?></button>
                             <script>
                                 <?php foreach($value as $index => $item): ?>
                                 mp_dd_add_list_item('<?= $var ?>', '<?= $item ?>');
                                 <?php endforeach; ?>
                             </script>
+                        <?php elseif (is_bool($value)): ?>
+                        <input type="hidden" name="<?= $var ?>" value="false"/>
+                        <input type="checkbox" id="<?= $var ?>" name="<?= $var ?>" value="true" <?= $value ? 'checked' : '' ?>/>
                         <?php else: ?>
                         <input id="<?= $var ?>" name="<?= $var ?>" value="<?= $value ?>"/>
                         <?php endif; ?>
@@ -85,6 +74,14 @@ class Item extends EmbeddedObject implements EmbeddedObjectInterface
             </tbody>
         </table>
         <?php
+        return ob_get_clean();
+    }
+
+    public function __toString()
+    {
+        $post = get_post($this->postID);
+        ob_start()
+        ?><a href="<?= get_permalink($this->postID) ?>"><?= $post->post_title ?></a><?php
         return ob_get_clean();
     }
 }
