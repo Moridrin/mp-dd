@@ -22,15 +22,15 @@ function getTextInputTD(group, name, id, value) {
 }
 
 function getTextListItemTD(group, id, value) {
-    var field = document.createElement("input");
-    field.setAttribute("id", group + "_" + id);
-    field.setAttribute("name", group + "_" + id);
-    field.setAttribute("style", "width: 100%;");
-    field.setAttribute("value", value);
+    var title = document.createElement("input");
+    title.setAttribute("id", group + "_" + id);
+    title.setAttribute("name", group + "_" + id);
+    title.setAttribute("style", "width: 100%;");
+    title.setAttribute("value", value);
     var td = document.createElement("td");
     td.setAttribute("style", "width: 200px;");
     td.setAttribute("id", group + "_" + id + "_td");
-    td.appendChild(field);
+    td.appendChild(title);
     return td;
 }
 

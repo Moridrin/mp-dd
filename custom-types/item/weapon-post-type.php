@@ -68,6 +68,9 @@ function mp_dd_save_weapon_meta($post_id, $post)
     if (!current_user_can('edit_post', $post->ID)) {
         return $post_id;
     }
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        return $post_id;
+    }
     $weapon = Weapon::fromPOST($post_id);
     $weapon->save();
     return $post_id;

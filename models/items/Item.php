@@ -11,6 +11,15 @@ class Item extends EmbeddedObject
     /** @var string[] $properties */
     public $properties = array();
 
+    const FIELD_OPTIONS
+        = array(
+            'damageType' => array(
+                'Bludgeoning',
+                'Piercing',
+                'Slashing',
+            ),
+        );
+
     protected function __construct()
     {
     }
@@ -65,6 +74,12 @@ class Item extends EmbeddedObject
                         <?php elseif (is_bool($value)): ?>
                         <input type="hidden" name="<?= $var ?>" value="false"/>
                         <input type="checkbox" id="<?= $var ?>" name="<?= $var ?>" value="true" <?= $value ? 'checked' : '' ?>/>
+                        <?php elseif (array_key_exists($var, self::FIELD_OPTIONS)): ?>
+                            <select id="<?= $var ?>" name="<?= $var ?>">
+                                <?php foreach (self::FIELD_OPTIONS[$var] as $option): ?>
+                                    <option value="<?= $option ?>" <?= $option == $value ? 'selected' : '' ?>><?= $option ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         <?php else: ?>
                         <input id="<?= $var ?>" name="<?= $var ?>" value="<?= $value ?>"/>
                         <?php endif; ?>

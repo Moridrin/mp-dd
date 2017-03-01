@@ -90,7 +90,13 @@ function mp_dd_creature_items()
 {
     global $post;
     $creature = Creature::load($post->ID);
-    $args     = array('post_type' => array('item', 'weapon', 'armor'));
+    $args     = array(
+        'post_type'      => array('item', 'weapon', 'armor'),
+        'posts_per_page' => -1,
+        'numberposts'    => -1,
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+    );
     $items    = get_posts($args);
     ?>
     <p id="current_items"><?= $creature->getCurrentItemsList() ?></p>
@@ -253,6 +259,9 @@ function mp_dd_save_creature_meta($post_id, $post)
     if (!current_user_can('edit_post', $post->ID)) {
         return $post_id;
     }
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        return $post_id;
+    }
     if (isset($_POST['aliases'])) {
         $aliases = !empty($_POST['aliases']) ? explode(',', $_POST['aliases']) : array();
         global $wpdb;
@@ -294,7 +303,7 @@ function mp_dd_get_available_tags($include_aliases = false)
     /** @noinspection PhpIncludeInspection */
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     $used_tags     = array();
-    $existing_tags = $wpdb->get_results("SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'creature'");
+    $existing_tags = $wpdb->get_results("SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'creature' AND post_status = 'publish'");
     foreach ($existing_tags as $alias) {
         $used_tags[$alias->ID] = strtolower($alias->post_title);
         if ($include_aliases) {

@@ -6,22 +6,24 @@
  * Time: 20:21
  */
 
+require_once 'item-content.php';
+
 function mp_dd_register_items_post_type()
 {
 
     $labels = array(
-        'name'                  => 'General Items',
-        'singular_name'         => 'General Item',
-        'add_new'               => 'Add General',
-        'add_new_item'          => 'Add General Item',
-        'edit_item'             => 'Edit Item',
-        'new_item'              => 'New General Item',
-        'view_item'             => 'View Item',
-        'search_items'          => 'Search General Items',
-        'not_found'             => 'No General Items found',
-        'not_found_in_trash'    => 'No General Items found in Trash',
-        'menu_name'             => 'D&D Items',
-        'all_items'             => 'All General Items',
+        'name'               => 'General Items',
+        'singular_name'      => 'General Item',
+        'add_new'            => 'Add General',
+        'add_new_item'       => 'Add General Item',
+        'edit_item'          => 'Edit Item',
+        'new_item'           => 'New General Item',
+        'view_item'          => 'View Item',
+        'search_items'       => 'Search General Items',
+        'not_found'          => 'No General Items found',
+        'not_found_in_trash' => 'No General Items found in Trash',
+        'menu_name'          => 'D&D Items',
+        'all_items'          => 'All General Items',
     );
 
     $args = array(
@@ -74,6 +76,9 @@ function mp_dd_item_properties()
 function mp_dd_save_item_meta($post_id, $post)
 {
     if (!current_user_can('edit_post', $post->ID)) {
+        return $post_id;
+    }
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         return $post_id;
     }
     $item = Item::fromPOST($post_id);

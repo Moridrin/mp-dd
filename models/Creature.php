@@ -236,7 +236,7 @@ class Creature extends EmbeddedObject
     public function getCurrentItemsList() {
         $list = '';
         foreach ($this->items as $key => $count) {
-            if ($count <= 0) {
+            if ($count <= 0 || strpos($key, '_') === false) {
                 continue;
             }
             $id = explode('_', $key)[0];

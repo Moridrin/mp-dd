@@ -38,7 +38,9 @@ abstract class EmbeddedObject
         }
         $objectVars = get_object_vars($embeddedObject);
         foreach ($objectVars as $var => $value) {
-            if (is_array($value)) {
+            if ($var == 'postID') {
+                continue;
+            } elseif (is_array($value)) {
                 $i = 0;
                 while (isset($_POST[$var . '_' . $i])) {
                     if (empty($_POST[$var . '_' . $i])) {
