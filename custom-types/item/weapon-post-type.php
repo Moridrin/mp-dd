@@ -28,7 +28,7 @@ function mp_dd_register_weapons_post_type()
         'labels'          => $labels,
         'hierarchical'    => false,
         'description'     => 'Weapons',
-        'supports'        => array('title', 'thumbnail', 'revisions'),
+        'supports'        => array('title', 'editor', 'thumbnail', 'revisions'),
         'public'          => true,
         'show_ui'         => true,
         "show_in_menu"    => 'edit.php?post_type=item',

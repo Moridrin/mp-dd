@@ -21,6 +21,19 @@ function getTextInputTD(group, name, id, value) {
     return td;
 }
 
+function getTextListItemTD(group, id, value) {
+    var field = document.createElement("input");
+    field.setAttribute("id", group + "_" + id);
+    field.setAttribute("name", group + "_" + id);
+    field.setAttribute("style", "width: 100%;");
+    field.setAttribute("value", value);
+    var td = document.createElement("td");
+    td.setAttribute("style", "width: 200px;");
+    td.setAttribute("id", group + "_" + id + "_td");
+    td.appendChild(field);
+    return td;
+}
+
 function getTextAreaTD(group, name, id, value) {
     var field = document.createElement("textarea");
     field.setAttribute("id", id + "_" + name);

@@ -11,7 +11,6 @@ class Armor extends Item
     const TYPE = 'armor';
 
     public $armorClass;
-    public $properties;
 
     protected function __construct()
     {

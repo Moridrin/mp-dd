@@ -29,7 +29,19 @@ abstract class EmbeddedObject
         }
         $objectVars = get_object_vars($embeddedObject);
         foreach ($objectVars as $var => $value) {
-            $embeddedObject->$var = mp_dd_sanitize($_POST[$var]);
+            if (is_array($value)) {
+                $i = 0;
+                while (isset($_POST[$var . '_' . $i])) {
+                    if (empty($_POST[$var . '_' . $i])) {
+                        $i++;
+                        continue;
+                    }
+                    array_push($embeddedObject->$var, mp_dd_sanitize($_POST[$var . '_' . $i]));
+                    $i++;
+                }
+            } else {
+                $embeddedObject->$var = mp_dd_sanitize($_POST[$var]);
+            }
         }
         return $embeddedObject;
     }

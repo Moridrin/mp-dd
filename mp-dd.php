@@ -18,6 +18,7 @@ require_once 'all-content-filter.php';
 require_once 'custom-types/creature/creature-post-type.php';
 require_once 'custom-types/item/item-post-type.php';
 require_once 'custom-types/item/weapon-post-type.php';
+require_once 'custom-types/item/armor-post-type.php';
 
 require_once 'models/EmbeddedObject.php';
 require_once 'models/EmbeddedObjectInterface.php';

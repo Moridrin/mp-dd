@@ -13,7 +13,6 @@ class Weapon extends Item
     public $martial;
     public $damage;
     public $damageType;
-    public $properties;
 
     protected function __construct()
     {
