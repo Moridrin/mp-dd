@@ -15,9 +15,6 @@ function mp_dd_custom_creature_content($content)
     $creature = Creature::load($post->ID);
     ob_start();
     ?>
-    <div class="show-on-medium-only" style="height: 1500px;">
-    <img src="<?= plugins_url() . '/' . plugin_basename(__DIR__) ?>/background.png" style="position: absolute; height: 1500px;"/>
-    </div>
     <?php
     $content = ob_get_clean();
     return $content;
