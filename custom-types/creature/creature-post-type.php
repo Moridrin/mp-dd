@@ -6,6 +6,8 @@
  * Time: 20:21
  */
 
+require_once 'creature-content.php';
+
 function mp_dd_register_creatures_post_type()
 {
 

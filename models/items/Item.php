@@ -24,6 +24,9 @@ class Item extends EmbeddedObject
     {
     }
 
+    /**
+     * @return string HTML of the editor
+     */
     public function getEditor()
     {
         ob_start();
@@ -92,6 +95,27 @@ class Item extends EmbeddedObject
         return ob_get_clean();
     }
 
+    /**
+     * @param $description
+     *
+     * @return string HTML
+     */
+    public function getHTML($description)
+    {
+        ob_start();
+        ?>
+        <div class="row">
+            <div class="col s12 l8">
+                <?= $description ?>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * @return string link to the page
+     */
     public function __toString()
     {
         $post = get_post($this->postID);
