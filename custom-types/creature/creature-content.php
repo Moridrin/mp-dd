@@ -13,11 +13,7 @@ function mp_dd_custom_creature_content($content)
         return $content;
     }
     $creature = Creature::load($post->ID);
-    ob_start();
-    ?>
-    <?php
-    $content = ob_get_clean();
-    return $content;
+    return $creature->getHTML($content);
 }
 
 add_filter('the_content', 'mp_dd_custom_creature_content');

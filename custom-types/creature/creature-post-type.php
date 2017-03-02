@@ -106,12 +106,12 @@ function mp_dd_creature_items()
     <ul id="item-list">
         <?php foreach ($items as $itemPost): ?>
             <?php $item = Item::getByID($itemPost->ID, $itemPost->post_type); ?>
-            <?php $key = $itemPost->ID . '_' . $itemPost->post_type; ?>
+            <?php $key = $itemPost->post_type . '_' . $itemPost->ID; ?>
             <?php $count = array_key_exists($key, $creature->items) ? $creature->items[$key] : 0; ?>
             <li>
                 <input
                         type="number"
-                        name="items[<?= $itemPost->ID . '_' . $itemPost->post_type ?>]"
+                        name="items[<?= $itemPost->post_type . '_' . $itemPost->ID ?>]"
                         min="0"
                         value="<?= $count ?>"
                         onchange="mp_dd_item_count_changed(event)"

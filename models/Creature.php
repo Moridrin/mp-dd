@@ -118,7 +118,7 @@ class Creature extends EmbeddedObject
             }
         }
         $creature->items = $_POST['items'];
-        $index = 0;
+        $index           = 0;
         while (isset($_POST['property_' . $index . '_title'])) {
             if (empty($_POST['property_' . $index . '_title'])) {
                 $index++;
@@ -129,6 +129,8 @@ class Creature extends EmbeddedObject
             }
             $index++;
         }
+        $creature->items  = array_diff($creature->items, array(0));
+        ksort($creature->items);
         $creature->postID = $postID;
         return $creature;
     }
@@ -233,17 +235,76 @@ class Creature extends EmbeddedObject
 
     #endregion
 
-    public function getCurrentItemsList() {
+    public function getItemFromKey($key)
+    {
+        if (strpos($key, '_') === false) {
+            return null;
+        }
+        $type = explode('_', $key)[0];
+        $id   = explode('_', $key)[1];
+        return Item::getByID($id, $type);
+    }
+
+    public function getCurrentItemsList()
+    {
         $list = '';
         foreach ($this->items as $key => $count) {
             if ($count <= 0 || strpos($key, '_') === false) {
                 continue;
             }
-            $id = explode('_', $key)[0];
-            $type = explode('_', $key)[1];
-            $item = Item::getByID($id, $type);
+            $item = $this->getItemFromKey($key);
             $list .= $item . ' ' . $count . 'x, ';
         }
         return $list;
+    }
+
+    public function getHTML($description)
+    {
+        ob_start();
+        ?>
+        <table class="striped">
+            <tr>
+                <th>Proficiency</th>
+                <td colspan="3"><?= $this->proficiency ?></td>
+            </tr>
+            <tr>
+                <th>Armor Class</th>
+                <td colspan="3"><?= $this->armorClass ?></td>
+            </tr>
+            <tr>
+                <th>Hit Points</th>
+                <td colspan="3"><?= $this->hitPoints ?></td>
+            </tr>
+            <tr>
+                <th>Speed</th>
+                <td colspan="3"><?= $this->speed ?></td>
+            </tr>
+            <?php foreach (self::STATS as $stat => $skills): ?>
+                <?php $statModifier = floor(($this->$stat - 10) / 2); ?>
+                <tr>
+                    <th><?= mp_dd_to_title($stat) ?></th>
+                    <td><?= $this->$stat ?></td>
+                    <td><?= $statModifier >= 0 ? '+' . $statModifier : $statModifier ?></td>
+                    <td>
+                        <table>
+                            <?php foreach ($skills as $skill): ?>
+                                <?php $skillModifier = $this->$skill ? $statModifier + $this->proficiency : $statModifier; ?>
+                                <tr>
+                                    <th><label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', str_replace($stat . '_', '', $skill))) ?></label></th>
+                                    <td><input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>" <?= $this->$skill ? 'checked' : '' ?>/></td>
+                                    <td id="skill_<?= $skill ?>_modifier"><?= $skillModifier >= 0 ? '+' . $skillModifier : $skillModifier ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </table>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+        <?php
+        foreach ($this->items as $key => $count) {
+            $item = $this->getItemFromKey($key);
+            echo $item->getHTML($item->getPost()->post_title . ' (' . $count . 'x)');
+        }
+        return ob_get_clean();
     }
 }

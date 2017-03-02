@@ -60,7 +60,7 @@ class Item extends EmbeddedObject
                 <tr>
                     <th>
                         <label for="<?= $var ?>">
-                            <?= mp_dd_to_camel_case($var, true) ?>
+                            <?= mp_dd_to_title($var) ?>
                         </label>
                     </th>
                     <td>
@@ -68,7 +68,7 @@ class Item extends EmbeddedObject
                             <table>
                                 <tbody id="<?= $var ?>-placeholder"></tbody>
                             </table>
-                            <button onclick="mp_dd_add_new_list_item(event)" data-group="<?= $var ?>">Add <?= mp_dd_to_camel_case($var, true) ?></button>
+                            <button onclick="mp_dd_add_new_list_item(event)" data-group="<?= $var ?>">Add <?= mp_dd_to_title($var) ?></button>
                             <script>
                                 <?php foreach($value as $index => $item): ?>
                                 mp_dd_add_list_item('<?= $var ?>', '<?= $item ?>');
@@ -111,6 +111,10 @@ class Item extends EmbeddedObject
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    public function getPost() {
+        return get_post($this->postID);
     }
 
     /**

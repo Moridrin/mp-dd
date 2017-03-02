@@ -27,6 +27,20 @@ function mp_dd_to_camel_case($string, $capitalizeFirstCharacter = false)
 }
 
 /**
+ * @param string $string
+ *
+ * @return string
+ */
+function mp_dd_to_title($string)
+{
+    $string = preg_replace('/(?<!\ )[A-Z]/', ' $0', $string);
+    $string = str_replace('-', ' ', $string);
+    $string = str_replace('_', ' ', $string);
+    $string = ucwords($string);
+    return $string;
+}
+
+/**
  * This function is for development purposes only and lets the developer print a variable in the PHP formatting to inspect what the variable is set to.
  *
  * @param mixed $variable any variable that you want to be printed.
