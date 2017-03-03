@@ -290,8 +290,10 @@ class Creature extends EmbeddedObject
                             <?php foreach ($skills as $skill): ?>
                                 <?php $skillModifier = $this->$skill ? $statModifier + $this->proficiency : $statModifier; ?>
                                 <tr>
-                                    <th><label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', str_replace($stat . '_', '', $skill))) ?></label></th>
-                                    <td><input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>" <?= $this->$skill ? 'checked' : '' ?>/></td>
+                                    <td>
+                                        <input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>" <?= $this->$skill ? 'checked' : '' ?> class="filled-in" disabled/>
+                                        <label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', str_replace($stat . '_', '', $skill))) ?></label>
+                                    </td>
                                     <td id="skill_<?= $skill ?>_modifier"><?= $skillModifier >= 0 ? '+' . $skillModifier : $skillModifier ?></td>
                                 </tr>
                             <?php endforeach; ?>
@@ -300,6 +302,12 @@ class Creature extends EmbeddedObject
                 </tr>
             <?php endforeach; ?>
         </table>
+        <div>
+            <p>
+                <input name="rememberme" class="filled-in" type="checkbox" id="rememberme" value="forever" checked="checked" style="width: auto; margin-right: 10px;">
+                <label for="rememberme">Remember Me</label>
+            </p>
+        </div>
         <?php
         foreach ($this->items as $key => $count) {
             $item = $this->getItemFromKey($key);
