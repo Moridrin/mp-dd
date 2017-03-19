@@ -30,7 +30,7 @@ function mp_dd_register_creatures_post_type()
         'labels'              => $labels,
         'hierarchical'        => true,
         'description'         => 'Creatures filterable by category',
-        'supports'            => array('title', 'thumbnail', 'revisions'),
+        'supports'            => array('title', 'editor', 'thumbnail', 'revisions'),
         'taxonomies'          => array('creature_category'),
         'public'              => true,
         'show_ui'             => true,

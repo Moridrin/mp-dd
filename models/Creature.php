@@ -131,6 +131,7 @@ class Creature extends EmbeddedObject
         }
         $creature->items  = array_diff($creature->items, array(0));
         ksort($creature->items);
+        $creature->items = $creature->items ?: array();
         $creature->postID = $postID;
         return $creature;
     }
@@ -302,12 +303,6 @@ class Creature extends EmbeddedObject
                 </tr>
             <?php endforeach; ?>
         </table>
-        <div>
-            <p>
-                <input name="rememberme" class="filled-in" type="checkbox" id="rememberme" value="forever" checked="checked" style="width: auto; margin-right: 10px;">
-                <label for="rememberme">Remember Me</label>
-            </p>
-        </div>
         <?php
         foreach ($this->items as $key => $count) {
             $item = $this->getItemFromKey($key);
