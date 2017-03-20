@@ -41,6 +41,18 @@ function mp_dd_to_title($string)
 }
 
 /**
+ * @param string $string
+ *
+ * @return string
+ */
+function mp_dd_to_value($string)
+{
+    $string = str_replace(' ', '_', $string);
+    $string = strtolower($string);
+    return $string;
+}
+
+/**
  * This function is for development purposes only and lets the developer print a variable in the PHP formatting to inspect what the variable is set to.
  *
  * @param mixed $variable any variable that you want to be printed.

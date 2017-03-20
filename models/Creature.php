@@ -94,6 +94,13 @@ class Creature extends EmbeddedObject
     protected $persuasion = false;
     #endregion
 
+    /** @var int $race PostID for the Race */
+    public $race;
+    /** @var int $class PostID for the Class */
+    public $class;
+    /** @var int $background PostID for the Background */
+    public $background;
+
     /** @var int[] $items */
     public $items = array();
 
@@ -117,7 +124,7 @@ class Creature extends EmbeddedObject
                 $creature->$var = $_POST[$var];
             }
         }
-        $creature->items = $_POST['items'];
+        $creature->items = isset($_POST['items']) ? $_POST['items'] : array();
         $index           = 0;
         while (isset($_POST['property_' . $index . '_title'])) {
             if (empty($_POST['property_' . $index . '_title'])) {
@@ -129,9 +136,8 @@ class Creature extends EmbeddedObject
             }
             $index++;
         }
-        $creature->items  = array_diff($creature->items, array(0));
+        $creature->items = array_diff($creature->items, array(0));
         ksort($creature->items);
-        $creature->items = $creature->items ?: array();
         $creature->postID = $postID;
         return $creature;
     }
@@ -240,95 +246,34 @@ class Creature extends EmbeddedObject
     /**
      * @return string HTML Table to edit the player type.
      */
-    public function getPlayerEditor()
+    public function getTypeEditor()
     {
         ob_start();
         ?>
         <table id="player_table" class="wp-list-table widefat fixed striped vertical-center" style="width: auto">
             <tr>
-                <th><label for="proficiency">Proficiency</label></th>
-                <td colspan="3"><input id="proficiency" type="number" name="proficiency" value="<?= $this->proficiency ?>"></td>
+                <th><label for="race">Race</label></th>
+                <td colspan="3">
+                    <?= Race::getRaceSelect($this->race) ?>
+                </td>
             </tr>
             <tr>
-                <th><label for="armorClass">Armor Class</label></th>
-                <td colspan="3"><input id="armorClass" type="text" name="armorClass" value="<?= $this->armorClass ?>"></td>
+                <th><label for="class">Class</label></th>
+                <td colspan="3">
+                    <select id="class" name="class">
+                        <option value="-1">Monster</option>
+                    </select>
+                </td>
             </tr>
             <tr>
-                <th><label for="hitPoints">Hit Points</label></th>
-                <td colspan="3"><input id="hitPoints" type="text" name="hitPoints" value="<?= $this->hitPoints ?>"></td>
+                <th><label for="background">Background</label></th>
+                <td colspan="3">
+                    <select id="background" name="background">
+                        <option value="-1">Monster</option>
+                    </select>
+                </td>
             </tr>
-            <tr>
-                <th><label for="speed">Speed</label></th>
-                <td colspan="3"><input id="speed" type="text" name="speed" value="<?= $this->speed ?>"></td>
-            </tr>
-            <?php foreach (self::STATS as $stat => $skills): ?>
-                <tr>
-                    <th><label for="stat_<?= $stat ?>"><?= ucwords(str_replace('_', ' ', $stat)) ?></label></th>
-                    <td><input id="stat_<?= $stat ?>" type="number" name="<?= $stat ?>" value="<?= $this->$stat ?>"/></td>
-                    <td id="stat_<?= $stat ?>_modifier">+0</td>
-                    <td>
-                        <table>
-                            <?php foreach ($skills as $skill): ?>
-                                <tr>
-                                    <th><label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', str_replace($stat . '_', '', $skill))) ?></label></th>
-                                    <td><input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>" <?= $this->$skill ? 'checked' : '' ?>/></td>
-                                    <td id="skill_<?= $skill ?>_modifier">+0</td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </table>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
         </table>
-
-        <script>
-            jQuery(function ($) {
-                var proficiencyField = $('#proficiency');
-                var proficiency = parseInt(proficiencyField.val());
-                var stats = <?= json_encode(self::STATS) ?>;
-                var statsTable = $("#stats_table");
-                statsTable.find(':input[type="number"]').on('input', function () {
-                    var stat = $(this).attr('id');
-                    stat = stat.replace('stat_', '');
-                    mp_dd_update_stats(stat);
-                });
-                statsTable.find(':input[type="checkbox"]').change(function () {
-                    var stat = $(this).data('stat');
-                    mp_dd_update_stats(stat);
-                });
-                proficiencyField.on('input', function () {
-                    proficiency = parseInt($(this).val());
-                    $.each(stats, function (stat, skills) {
-                        mp_dd_update_stats(stat);
-                    })
-                });
-                $.each(stats, function (stat, skills) {
-                    mp_dd_update_stats(stat);
-                });
-
-                function mp_dd_update_stats(stat) {
-                    var statModifier = Math.floor(($('#stat_' + stat).val() - 10) / 2);
-                    if (statModifier >= 0) {
-                        $('#stat_' + stat + '_modifier').html('+' + statModifier);
-                    } else {
-                        $('#stat_' + stat + '_modifier').html(statModifier);
-                    }
-
-                    var skills = stats[stat];
-                    $.each(skills, function (index, skill) {
-                        var skillModifier = statModifier;
-                        if ($('#skill_' + skill).is(':checked')) {
-                            skillModifier += proficiency;
-                        }
-                        if (statModifier >= 0) {
-                            $('#skill_' + skill + '_modifier').html('+' + skillModifier);
-                        } else {
-                            $('#skill_' + skill + '_modifier').html(skillModifier);
-                        }
-                    });
-                }
-            });
-        </script>
         <?php
         return ob_get_clean();
     }
@@ -362,51 +307,112 @@ class Creature extends EmbeddedObject
     {
         ob_start();
         ?>
-        <table class="striped">
-            <tr>
-                <th>Proficiency</th>
-                <td colspan="3"><?= $this->proficiency ?></td>
-            </tr>
-            <tr>
-                <th>Armor Class</th>
-                <td colspan="3"><?= $this->armorClass ?></td>
-            </tr>
-            <tr>
-                <th>Hit Points</th>
-                <td colspan="3"><?= $this->hitPoints ?></td>
-            </tr>
-            <tr>
-                <th>Speed</th>
-                <td colspan="3"><?= $this->speed ?></td>
-            </tr>
-            <?php foreach (self::STATS as $stat => $skills): ?>
-                <?php $statModifier = floor(($this->$stat - 10) / 2); ?>
-                <tr>
-                    <th><?= mp_dd_to_title($stat) ?></th>
-                    <td><?= $this->$stat ?></td>
-                    <td><?= $statModifier >= 0 ? '+' . $statModifier : $statModifier ?></td>
-                    <td>
-                        <table>
-                            <?php foreach ($skills as $skill): ?>
-                                <?php $skillModifier = $this->$skill ? $statModifier + $this->proficiency : $statModifier; ?>
-                                <tr>
-                                    <td>
-                                        <input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>" <?= $this->$skill ? 'checked' : '' ?> class="filled-in" disabled/>
-                                        <label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', str_replace($stat . '_', '', $skill))) ?></label>
-                                    </td>
-                                    <td id="skill_<?= $skill ?>_modifier"><?= $skillModifier >= 0 ? '+' . $skillModifier : $skillModifier ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </table>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
+        <ul class="collapsible" data-collapsible="accordion">
+            <li>
+                <div class="collapsible-header">Creature Type</div>
+                <div class="collapsible-body">
+                    <table class="striped">
+                        <tr>
+                            <th>Race</th>
+                            <td colspan="3"><?= $this->race > 0 ? Race::load($this->race)->getLink() : 'Monster' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Class</th>
+                            <td colspan="3"><?= $this->class > 0 ? Race::load($this->class)->getLink() : 'Monster' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Background</th>
+                            <td colspan="3"><?= $this->background > 0 ? Race::load($this->background)->getLink() : 'Monster' ?></td>
+                        </tr>
+                    </table>
+                </div>
+            </li>
+            <li>
+                <div class="collapsible-header">Stats</div>
+                <div class="collapsible-body">
+                    <table class="striped">
+                        <tr>
+                            <th>Proficiency</th>
+                            <td colspan="3"><?= $this->proficiency ?></td>
+                        </tr>
+                        <tr>
+                            <th>Armor Class</th>
+                            <td colspan="3"><?= $this->armorClass ?></td>
+                        </tr>
+                        <tr>
+                            <th>Hit Points</th>
+                            <td colspan="3"><?= $this->hitPoints ?></td>
+                        </tr>
+                        <tr>
+                            <th>Speed</th>
+                            <td colspan="3"><?= $this->speed ?></td>
+                        </tr>
+                        <?php foreach (self::STATS as $stat => $skills): ?>
+                            <?php $statModifier = floor(($this->$stat - 10) / 2); ?>
+                            <tr>
+                                <th><?= mp_dd_to_title($stat) ?></th>
+                                <td><?= $this->$stat ?></td>
+                                <td><?= $statModifier >= 0 ? '+' . $statModifier : $statModifier ?></td>
+                                <td>
+                                    <table>
+                                        <?php foreach ($skills as $skill): ?>
+                                            <?php $skillModifier = $this->$skill ? $statModifier + $this->proficiency : $statModifier; ?>
+                                            <tr>
+                                                <td>
+                                                    <input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>" <?= $this->$skill ? 'checked' : '' ?> class="filled-in" disabled/>
+                                                    <label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', str_replace($stat . '_', '', $skill))) ?></label>
+                                                </td>
+                                                <td id="skill_<?= $skill ?>_modifier"><?= $skillModifier >= 0 ? '+' . $skillModifier : $skillModifier ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </table>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+                </div>
+            </li>
+            <li>
+                <div class="collapsible-header">Properties</div>
+                <div class="collapsible-body">
+                    <table class="striped">
+                        <?php
+                        $properties = $this->properties;
+                        if ($this->race > 0) {
+                            foreach (Race::load($this->race)->properties as $title => $property_description) {
+                                if (isset($properties[$title]) && $properties[$title] != $property_description) {
+                                    $property_description = $properties[$title] . '<br/>' . $property_description;
+                                }
+                                $properties[$title] = $property_description;
+                            }
+                        }
+                        ?>
+                        <?php foreach ($properties as $title => $property_description): ?>
+                            <tr>
+                                <th><?= $title ?></th>
+                                <td colspan="3"><?= $property_description ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+                </div>
+            </li>
+            <li>
+                <div class="collapsible-header">Items</div>
+                <div class="collapsible-body">
+                    <?php
+                    if (count($this->items) > 0) {
+                        foreach ($this->items as $key => $count) {
+                            $item = $this->getItemFromKey($key);
+                            echo $item->getHTML($item->getPost()->post_title . ' (' . $count . 'x)');
+                        }
+                    } else {
+                        echo 'No Items';
+                    }
+                    ?>
+                </div>
+            </li>
+        </ul>
         <?php
-        foreach ($this->items as $key => $count) {
-            $item = $this->getItemFromKey($key);
-            echo $item->getHTML($item->getPost()->post_title . ' (' . $count . 'x)');
-        }
-        return ob_get_clean();
+        return ob_get_clean() . $description;
     }
 }

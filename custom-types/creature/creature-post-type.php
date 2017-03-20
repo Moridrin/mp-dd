@@ -73,8 +73,8 @@ add_action('init', 'mp_dd_register_creatures_taxonomy');
 
 function mp_dd_add_creature_meta_boxes()
 {
+    add_meta_box('mp_dd_creature_type', 'Creature Type', 'mp_dd_creature_type', 'creature', 'advanced', 'default');
     add_meta_box('mp_dd_creature_stats', 'Stats', 'mp_dd_creature_stats', 'creature', 'advanced', 'default');
-    add_meta_box('mp_dd_player_type', 'Player Type', 'mp_dd_player_type', 'creature', 'advanced', 'default');
     add_meta_box('mp_dd_creature_items', 'Items', 'mp_dd_creature_items', 'creature', 'advanced', 'default');
     add_meta_box('mp_dd_creature_properties', 'Properties', 'mp_dd_creature_properties', 'creature', 'advanced', 'default');
     add_meta_box('mp_dd_creature_aliases', 'Aliases', 'mp_dd_creature_aliases', 'creature', 'side', 'default');
@@ -89,11 +89,11 @@ function mp_dd_creature_stats()
     echo $creature->getStatsEditor();
 }
 
-function mp_dd_player_type()
+function mp_dd_creature_type()
 {
     global $post;
     $creature = Creature::load($post->ID);
-    echo $creature->getPlayerEditor();
+    echo $creature->getTypeEditor();
 }
 
 function mp_dd_creature_items()

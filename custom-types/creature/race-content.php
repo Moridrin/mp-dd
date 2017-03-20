@@ -13,7 +13,7 @@ function mp_dd_custom_race_content($content)
         return $content;
     }
     $race = Race::load($post->ID);
-    return $content . $race->getHTML($content);
+    return $content . $race->getPropertiesHTML();
 }
 
-//add_filter('the_content', 'mp_dd_custom_race_content');
+add_filter('the_content', 'mp_dd_custom_race_content');
