@@ -260,17 +260,13 @@ class Creature extends EmbeddedObject
             <tr>
                 <th><label for="class">Class</label></th>
                 <td colspan="3">
-                    <select id="class" name="class">
-                        <option value="-1">Monster</option>
-                    </select>
+                    <?= PropertyGroup::getPropertyGroupSelect('class', $this->class) ?>
                 </td>
             </tr>
             <tr>
                 <th><label for="background">Background</label></th>
                 <td colspan="3">
-                    <select id="background" name="background">
-                        <option value="-1">Monster</option>
-                    </select>
+                    <?= PropertyGroup::getPropertyGroupSelect('background', $this->background) ?>
                 </td>
             </tr>
         </table>

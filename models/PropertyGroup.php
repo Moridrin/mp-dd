@@ -27,7 +27,7 @@ class PropertyGroup extends EmbeddedObject
         $index         = 0;
         while (isset($_POST['property_' . $index . '_title'])) { //TODO Improve (this removes all after empty title)
             $title       = mp_dd_sanitize($_POST['property_' . $index . '_title']);
-            $description = str_replace(PHP_EOL, '<br/>', mp_dd_sanitize($_POST['property_' . $index . '_description']));
+            $description = mp_dd_sanitize($_POST['property_' . $index . '_description']);
             if (empty($title)) {
                 $index++;
                 continue;
@@ -48,14 +48,12 @@ class PropertyGroup extends EmbeddedObject
         ob_start();
         ?>
         <div class="card-panel">
-            <table class="striped">
+            <div class="row">
                 <?php foreach ($this->properties as $title => $property): ?>
-                    <tr>
-                        <th><?= mp_dd_to_title($title) ?></th>
-                        <td><?= $property ?></td>
-                    </tr>
+                    <div class="col s4" style="padding: 10px 0;"><strong><?= mp_dd_to_title($title) ?></strong></div>
+                    <div class="col s8" style="padding: 10px 0;"><?= $property ?></div>
                 <?php endforeach; ?>
-            </table>
+            </div>
         </div>
         <?php
         return ob_get_clean();

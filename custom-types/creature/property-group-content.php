@@ -9,7 +9,7 @@
 function mp_dd_custom_race_content($content)
 {
     global $post;
-    if ($post->post_type != 'race') {
+    if ($post->post_type != 'race' && $post->post_type != 'class' && $post->post_type != 'background') {
         return $content;
     }
     $race = PropertyGroup::load($post->ID);
