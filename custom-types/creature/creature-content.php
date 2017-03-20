@@ -8,11 +8,13 @@
 
 function mp_dd_custom_creature_content($content)
 {
+    return 'testBla';
     global $post;
     if ($post->post_type != 'creature') {
         return $content;
     }
     $creature = Creature::load($post->ID);
+    echo 'test';
     return $creature->getHTML($content);
 }
 

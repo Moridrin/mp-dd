@@ -254,7 +254,7 @@ class Creature extends EmbeddedObject
             <tr>
                 <th><label for="race">Race</label></th>
                 <td colspan="3">
-                    <?= Race::getRaceSelect($this->race) ?>
+                    <?= PropertyGroup::getPropertyGroupSelect('race', $this->race) ?>
                 </td>
             </tr>
             <tr>
@@ -307,69 +307,57 @@ class Creature extends EmbeddedObject
     {
         ob_start();
         ?>
-        <ul class="collapsible" data-collapsible="accordion">
+        <ul class="collapsible" data-collapsible="expandable">
             <li>
                 <div class="collapsible-header">Creature Type</div>
-                <div class="collapsible-body">
-                    <table class="striped">
-                        <tr>
-                            <th>Race</th>
-                            <td colspan="3"><?= $this->race > 0 ? Race::load($this->race)->getLink() : 'Monster' ?></td>
-                        </tr>
-                        <tr>
-                            <th>Class</th>
-                            <td colspan="3"><?= $this->class > 0 ? Race::load($this->class)->getLink() : 'Monster' ?></td>
-                        </tr>
-                        <tr>
-                            <th>Background</th>
-                            <td colspan="3"><?= $this->background > 0 ? Race::load($this->background)->getLink() : 'Monster' ?></td>
-                        </tr>
-                    </table>
+                <div class="collapsible-body row" style="margin-bottom: 0;">
+                    <div class="col s4"><strong>Race</strong></div>
+                    <div class="col s8"><?= $this->race > 0 ? PropertyGroup::load($this->race)->getLink() : 'Monster' ?></div>
+                    <div class="col s4"><strong>Class</strong></div>
+                    <div class="col s8"><?= $this->class > 0 ? PropertyGroup::load($this->class)->getLink() : 'Monster' ?></div>
+                    <div class="col s4"><strong>Background</strong></div>
+                    <div class="col s8"><?= $this->background > 0 ? PropertyGroup::load($this->background)->getLink() : 'Monster' ?></div>
                 </div>
             </li>
             <li>
                 <div class="collapsible-header">Stats</div>
                 <div class="collapsible-body">
-                    <table class="striped">
-                        <tr>
-                            <th>Proficiency</th>
-                            <td colspan="3"><?= $this->proficiency ?></td>
-                        </tr>
-                        <tr>
-                            <th>Armor Class</th>
-                            <td colspan="3"><?= $this->armorClass ?></td>
-                        </tr>
-                        <tr>
-                            <th>Hit Points</th>
-                            <td colspan="3"><?= $this->hitPoints ?></td>
-                        </tr>
-                        <tr>
-                            <th>Speed</th>
-                            <td colspan="3"><?= $this->speed ?></td>
-                        </tr>
+                    <div class="row" style="margin-bottom: 0;">
+                        <div class="col s4"><strong>Proficiency</strong></div>
+                        <div class="col s8"><?= $this->proficiency ?></div>
+                        <div class="col s4"><strong>Armor Class</strong></div>
+                        <div class="col s8"><?= $this->armorClass ?></div>
+                        <div class="col s4"><strong>Hit Points</strong></div>
+                        <div class="col s8"><?= $this->hitPoints ?></div>
+                        <div class="col s4"><strong>Speed</strong></div>
+                        <div class="col s8"><?= $this->speed ?></div>
+                    </div>
+                    <ul class="collapsible" data-collapsible="expandable">
                         <?php foreach (self::STATS as $stat => $skills): ?>
                             <?php $statModifier = floor(($this->$stat - 10) / 2); ?>
-                            <tr>
-                                <th><?= mp_dd_to_title($stat) ?></th>
-                                <td><?= $this->$stat ?></td>
-                                <td><?= $statModifier >= 0 ? '+' . $statModifier : $statModifier ?></td>
-                                <td>
-                                    <table>
+                            <li>
+                                <div class="collapsible-header" style="padding: 0;">
+                                    <div class="col s4"><?= mp_dd_to_title($stat) ?></div>
+                                    <div class="col s4"><?= $this->$stat ?></div>
+                                    <div class="col s4"><?= $statModifier >= 0 ? '+' . $statModifier : $statModifier ?></div>
+                                </div>
+                                <div class="collapsible-body">
+                                    <div class="row" style="margin-bottom: 0;">
                                         <?php foreach ($skills as $skill): ?>
                                             <?php $skillModifier = $this->$skill ? $statModifier + $this->proficiency : $statModifier; ?>
-                                            <tr>
-                                                <td>
-                                                    <input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>" <?= $this->$skill ? 'checked' : '' ?> class="filled-in" disabled/>
-                                                    <label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', str_replace($stat . '_', '', $skill))) ?></label>
-                                                </td>
-                                                <td id="skill_<?= $skill ?>_modifier"><?= $skillModifier >= 0 ? '+' . $skillModifier : $skillModifier ?></td>
-                                            </tr>
+                                            <div class="col s8">
+                                                <input id="skill_<?= $skill ?>" type="checkbox" name="<?= $skill ?>" data-stat="<?= $stat ?>" <?= $this->$skill ? 'checked' : '' ?> class="filled-in" disabled/>
+                                                <label for="skill_<?= $skill ?>"><?= ucwords(str_replace('_', ' ', str_replace($stat . '_', '', $skill))) ?></label>
+                                            </div>
+                                            <div class="col s4" style="height: 25px">
+                                                <?= $skillModifier >= 0 ? '+' . $skillModifier : $skillModifier ?>
+                                            </div>
                                         <?php endforeach; ?>
-                                    </table>
-                                </td>
-                            </tr>
+                                    </div>
+                                </div>
+                            </li>
                         <?php endforeach; ?>
-                    </table>
+                    </ul>
                 </div>
             </li>
             <li>
@@ -379,7 +367,7 @@ class Creature extends EmbeddedObject
                         <?php
                         $properties = $this->properties;
                         if ($this->race > 0) {
-                            foreach (Race::load($this->race)->properties as $title => $property_description) {
+                            foreach (PropertyGroup::load($this->race)->properties as $title => $property_description) {
                                 if (isset($properties[$title]) && $properties[$title] != $property_description) {
                                     $property_description = $properties[$title] . '<br/>' . $property_description;
                                 }

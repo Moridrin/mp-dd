@@ -12,7 +12,7 @@ function mp_dd_custom_race_content($content)
     if ($post->post_type != 'race') {
         return $content;
     }
-    $race = Race::load($post->ID);
+    $race = PropertyGroup::load($post->ID);
     return $content . $race->getPropertiesHTML();
 }
 

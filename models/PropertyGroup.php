@@ -6,7 +6,7 @@
  * Date: 27-2-17
  * Time: 7:56
  */
-class Race extends EmbeddedObject
+class PropertyGroup extends EmbeddedObject
 {
     #region Variables
     /** @var string[] $properties */
@@ -19,12 +19,12 @@ class Race extends EmbeddedObject
      *
      * @param int $postID is the id of the post where this object is embedded in.
      *
-     * @return Race|false
+     * @return PropertyGroup|false
      */
     public static function fromPOST($postID)
     {
-        $race  = new Race();
-        $index = 0;
+        $propertyGroup = new PropertyGroup();
+        $index         = 0;
         while (isset($_POST['property_' . $index . '_title'])) { //TODO Improve (this removes all after empty title)
             $title       = mp_dd_sanitize($_POST['property_' . $index . '_title']);
             $description = str_replace(PHP_EOL, '<br/>', mp_dd_sanitize($_POST['property_' . $index . '_description']));
@@ -33,12 +33,12 @@ class Race extends EmbeddedObject
                 continue;
             }
             if (isset($description)) {
-                $race->properties[$title] = $description;
+                $propertyGroup->properties[$title] = $description;
             }
             $index++;
         }
-        $race->postID = $postID;
-        return $race;
+        $propertyGroup->postID = $postID;
+        return $propertyGroup;
     }
 
     #endregion
@@ -61,14 +61,13 @@ class Race extends EmbeddedObject
         return ob_get_clean();
     }
 
-    public static function getRaceSelect($selected)
+    public static function getPropertyGroupSelect($propertyGroup, $selected)
     {
         global $wpdb;
-        $custom_post_type = 'race';
-        $results          = $wpdb->get_results($wpdb->prepare("SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = %s and post_status = 'publish'", $custom_post_type), ARRAY_A);
+        $results = $wpdb->get_results($wpdb->prepare("SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = %s and post_status = 'publish'", $propertyGroup), ARRAY_A);
         ob_start();
         ?>
-        <select name="race" id="race" title="Race">
+        <select name="<?= $propertyGroup ?>" id="<?= $propertyGroup ?>" title="<?= mp_dd_to_title($propertyGroup) ?>">
             <option value="-1">Monster</option>
             <?php foreach ($results as $index => $post): ?>
                 <option value="<?= $post['ID'] ?>" <?php selected($selected, $post['ID']) ?>><?= $post['post_title'] ?></option>

@@ -6,11 +6,10 @@
  * Time: 20:21
  */
 
-require_once 'race-content.php';
+require_once 'property-group-content.php';
 
-function mp_dd_register_races_post_type()
+function mp_dd_register_property_group_post_types()
 {
-
     $labels = array(
         'name'                  => 'Races',
         'singular_name'         => 'Race',
@@ -36,25 +35,87 @@ function mp_dd_register_races_post_type()
         "show_in_menu"    => 'edit.php?post_type=creature',
         'has_archive'     => true,
         'capability_type' => 'post',
-        'slug'            => 'dd_race',
+        'slug'            => 'race',
     );
 
     register_post_type('race', $args);
+
+    $labels = array(
+        'name'                  => 'Classes',
+        'singular_name'         => 'Class',
+        'add_new'               => 'Add new',
+        'add_new_item'          => 'Add New Class',
+        'edit_item'             => 'Edit Class',
+        'new_item'              => 'New Class',
+        'view_item'             => 'View Class',
+        'search_items'          => 'Search Classes',
+        'not_found'             => 'No Class found',
+        'not_found_in_trash'    => 'No Class found in Trash',
+        'menu_name'             => 'D&D Class',
+        'all_items'             => 'All Classes',
+    );
+
+    $args = array(
+        'labels'          => $labels,
+        'hierarchical'    => false,
+        'description'     => 'Class',
+        'supports'        => array('title', 'editor', 'thumbnail', 'revisions'),
+        'public'          => true,
+        'show_ui'         => true,
+        "show_in_menu"    => 'edit.php?post_type=creature',
+        'has_archive'     => true,
+        'capability_type' => 'post',
+        'slug'            => 'class',
+    );
+
+    register_post_type('class', $args);
+
+    $labels = array(
+        'name'                  => 'Backgrounds',
+        'singular_name'         => 'Background',
+        'add_new'               => 'Add new',
+        'add_new_item'          => 'Add New Background',
+        'edit_item'             => 'Edit Background',
+        'new_item'              => 'New Background',
+        'view_item'             => 'View Background',
+        'search_items'          => 'Search Backgrounds',
+        'not_found'             => 'No Background found',
+        'not_found_in_trash'    => 'No Background found in Trash',
+        'menu_name'             => 'D&D Background',
+        'all_items'             => 'All Backgrounds',
+    );
+
+    $args = array(
+        'labels'          => $labels,
+        'hierarchical'    => false,
+        'description'     => 'Background',
+        'supports'        => array('title', 'editor', 'thumbnail', 'revisions'),
+        'public'          => true,
+        'show_ui'         => true,
+        "show_in_menu"    => 'edit.php?post_type=creature',
+        'has_archive'     => true,
+        'capability_type' => 'post',
+        'slug'            => 'background',
+    );
+
+    register_post_type('background', $args);
 }
 
-add_action('init', 'mp_dd_register_races_post_type');
+add_action('init', 'mp_dd_register_property_group_post_types');
 
-function mp_dd_add_race_meta_boxes()
+function mp_dd_add_property_group_meta_boxes()
 {
-    add_meta_box('mp_dd_race_properties', 'Properties', 'mp_dd_race_properties', 'race', 'advanced', 'default');
+    add_meta_box('mp_dd_race_properties', 'Properties', 'mp_dd_property_group_properties', 'race', 'advanced', 'default');
+    add_meta_box('mp_dd_class_properties', 'Properties', 'mp_dd_property_group_properties', 'class', 'advanced', 'default');
+    add_meta_box('mp_dd_background_properties', 'Properties', 'mp_dd_property_group_properties', 'background', 'advanced', 'default');
 }
 
-add_action('add_meta_boxes', 'mp_dd_add_race_meta_boxes');
+add_action('add_meta_boxes', 'mp_dd_add_property_group_meta_boxes');
 
-function mp_dd_race_properties()
+function mp_dd_property_group_properties()
 {
     global $post;
-    $race = Race::load($post->ID);
+    $propertyGroup = PropertyGroup::load($post->ID);
     ?>
     <table class="wp-list-table widefat fixed striped vertical-center">
         <tbody id="properties-placeholder"></tbody>
@@ -75,7 +136,7 @@ function mp_dd_race_properties()
             tr.appendChild(getTextAreaTD('property', 'description', id, description));
             container.appendChild(tr);
         }
-        <?php foreach($race->properties as $title => $description): ?>
+        <?php foreach($propertyGroup->properties as $title => $description): ?>
         mp_dd_add_property(index, '<?= $title ?>', '<?= str_replace('<br/>', '\n', $description) ?>');
         index++;
         <?php endforeach; ?>
@@ -89,7 +150,7 @@ function mp_dd_race_properties()
  *
  * @return int the post_id
  */
-function mp_dd_save_race_meta($post_id, $post)
+function mp_dd_save_property_group_meta($post_id, $post)
 {
     if (!current_user_can('edit_post', $post->ID)) {
         return $post_id;
@@ -125,9 +186,11 @@ function mp_dd_save_race_meta($post_id, $post)
         }
         update_post_meta($post->ID, 'aliases', implode(',', $correct_aliases));
     }
-    $race = Race::fromPOST($post_id);
-    $race->save();
+    $propertyGroup = PropertyGroup::fromPOST($post_id);
+    $propertyGroup->save();
     return $post_id;
 }
 
-add_action('save_post_race', 'mp_dd_save_race_meta', 1, 2);
+add_action('save_post_race', 'mp_dd_save_property_group_meta', 1, 2);
+add_action('save_post_class', 'mp_dd_save_property_group_meta', 1, 2);
+add_action('save_post_background', 'mp_dd_save_property_group_meta', 1, 2);
