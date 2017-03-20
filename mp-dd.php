@@ -16,12 +16,14 @@ require_once 'functions.php';
 require_once 'all-content-filter.php';
 
 require_once 'custom-types/creature/creature-post-type.php';
+require_once 'custom-types/creature/race-post-type.php';
 require_once 'custom-types/item/item-post-type.php';
 require_once 'custom-types/item/weapon-post-type.php';
 require_once 'custom-types/item/armor-post-type.php';
 
 require_once 'models/EmbeddedObject.php';
 require_once 'models/Creature.php';
+require_once 'models/Race.php';
 require_once 'models/items/Item.php';
 
 function mp_dd_register_mp_dd()

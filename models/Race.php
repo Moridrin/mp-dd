@@ -6,7 +6,7 @@
  * Date: 27-2-17
  * Time: 7:56
  */
-class Creature extends EmbeddedObject
+class Race extends EmbeddedObject
 {
     #region Constants
     const STATS

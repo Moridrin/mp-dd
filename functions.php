@@ -110,3 +110,35 @@ function mp_dd_sanitize($value)
     $value = sanitize_text_field($value);
     return $value;
 }
+
+function mp_dd_get_available_tags($include_aliases = false)
+{
+    global $wpdb;
+    /** @noinspection PhpIncludeInspection */
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    $used_tags     = array();
+    $existing_tags = $wpdb->get_results("SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'creature' AND post_status = 'publish'");
+    foreach ($existing_tags as $alias) {
+        $used_tags[$alias->ID] = strtolower($alias->post_title);
+        if ($include_aliases) {
+            foreach (mp_dd_get_aliases_for_post($alias->ID) as $item) {
+                $used_tags[$alias->ID . '_alias_' . $item] = $item;
+            }
+        }
+    }
+    return $used_tags;
+}
+
+function mp_dd_get_aliases_for_post($post_id)
+{
+    global $wpdb;
+    /** @noinspection PhpIncludeInspection */
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    $used_tags     = array();
+    $table_name    = $wpdb->prefix . "mp_creature_aliases";
+    $existing_tags = $wpdb->get_results("SELECT alias FROM {$table_name} WHERE post_id = {$post_id}");
+    foreach ($existing_tags as $alias) {
+        $used_tags[] = strtolower($alias->alias);
+    }
+    return $used_tags;
+}

@@ -74,6 +74,7 @@ add_action('init', 'mp_dd_register_creatures_taxonomy');
 function mp_dd_add_creature_meta_boxes()
 {
     add_meta_box('mp_dd_creature_stats', 'Stats', 'mp_dd_creature_stats', 'creature', 'advanced', 'default');
+    add_meta_box('mp_dd_player_type', 'Player Type', 'mp_dd_player_type', 'creature', 'advanced', 'default');
     add_meta_box('mp_dd_creature_items', 'Items', 'mp_dd_creature_items', 'creature', 'advanced', 'default');
     add_meta_box('mp_dd_creature_properties', 'Properties', 'mp_dd_creature_properties', 'creature', 'advanced', 'default');
     add_meta_box('mp_dd_creature_aliases', 'Aliases', 'mp_dd_creature_aliases', 'creature', 'side', 'default');
@@ -86,6 +87,13 @@ function mp_dd_creature_stats()
     global $post;
     $creature = Creature::load($post->ID);
     echo $creature->getStatsEditor();
+}
+
+function mp_dd_player_type()
+{
+    global $post;
+    $creature = Creature::load($post->ID);
+    echo $creature->getPlayerEditor();
 }
 
 function mp_dd_creature_items()
@@ -298,35 +306,3 @@ function mp_dd_save_creature_meta($post_id, $post)
 }
 
 add_action('save_post_creature', 'mp_dd_save_creature_meta', 1, 2);
-
-function mp_dd_get_available_tags($include_aliases = false)
-{
-    global $wpdb;
-    /** @noinspection PhpIncludeInspection */
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    $used_tags     = array();
-    $existing_tags = $wpdb->get_results("SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'creature' AND post_status = 'publish'");
-    foreach ($existing_tags as $alias) {
-        $used_tags[$alias->ID] = strtolower($alias->post_title);
-        if ($include_aliases) {
-            foreach (mp_dd_get_aliases_for_post($alias->ID) as $item) {
-                $used_tags[$alias->ID . '_alias_' . $item] = $item;
-            }
-        }
-    }
-    return $used_tags;
-}
-
-function mp_dd_get_aliases_for_post($post_id)
-{
-    global $wpdb;
-    /** @noinspection PhpIncludeInspection */
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    $used_tags     = array();
-    $table_name    = $wpdb->prefix . "mp_creature_aliases";
-    $existing_tags = $wpdb->get_results("SELECT alias FROM {$table_name} WHERE post_id = {$post_id}");
-    foreach ($existing_tags as $alias) {
-        $used_tags[] = strtolower($alias->alias);
-    }
-    return $used_tags;
-}
