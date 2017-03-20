@@ -363,7 +363,7 @@ class Creature extends EmbeddedObject
             <li>
                 <div class="collapsible-header">Properties</div>
                 <div class="collapsible-body">
-                    <table class="striped">
+                    <div class="row" style="margin-bottom: 0;">
                         <?php
                         $properties = $this->properties;
                         if ($this->race > 0) {
@@ -376,12 +376,10 @@ class Creature extends EmbeddedObject
                         }
                         ?>
                         <?php foreach ($properties as $title => $property_description): ?>
-                            <tr>
-                                <th><?= $title ?></th>
-                                <td colspan="3"><?= $property_description ?></td>
-                            </tr>
+                            <div class="col s4" style="padding: 10px 0;"><strong><?= $title ?></strong></div>
+                            <div class="col s8" style="padding: 10px 0;"><?= $property_description ?></div>
                         <?php endforeach; ?>
-                    </table>
+                    </div>
                 </div>
             </li>
             <li>
