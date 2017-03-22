@@ -27,7 +27,7 @@ class PropertyGroup extends EmbeddedObject
         $index         = 0;
         while (isset($_POST['property_' . $index . '_title'])) { //TODO Improve (this removes all after empty title)
             $title       = mp_dd_sanitize($_POST['property_' . $index . '_title']);
-            $description = mp_dd_sanitize($_POST['property_' . $index . '_description']);
+            $description = implode('<br/>', array_map('mp_dd_sanitize', explode(PHP_EOL, $_POST['property_' . $index . '_description'])));
             if (empty($title)) {
                 $index++;
                 continue;
@@ -38,6 +38,7 @@ class PropertyGroup extends EmbeddedObject
             $index++;
         }
         $propertyGroup->postID = $postID;
+        mp_dd_var_export($propertyGroup);
         return $propertyGroup;
     }
 

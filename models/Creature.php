@@ -370,6 +370,22 @@ class Creature extends EmbeddedObject
                                 $properties[$title] = $property_description;
                             }
                         }
+                        if ($this->class > 0) {
+                            foreach (PropertyGroup::load($this->class)->properties as $title => $property_description) {
+                                if (isset($properties[$title]) && $properties[$title] != $property_description) {
+                                    $property_description = $properties[$title] . '<br/>' . $property_description;
+                                }
+                                $properties[$title] = $property_description;
+                            }
+                        }
+                        if ($this->background > 0) {
+                            foreach (PropertyGroup::load($this->background)->properties as $title => $property_description) {
+                                if (isset($properties[$title]) && $properties[$title] != $property_description) {
+                                    $property_description = $properties[$title] . '<br/>' . $property_description;
+                                }
+                                $properties[$title] = $property_description;
+                            }
+                        }
                         ?>
                         <?php foreach ($properties as $title => $property_description): ?>
                             <div class="col s4" style="padding: 10px 0;"><strong><?= $title ?></strong></div>
