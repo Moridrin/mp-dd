@@ -8,6 +8,10 @@
  */
 abstract class EmbeddedObject
 {
+    const HTML
+        = array(
+            'map',
+        );
     /** @var int $post */
     public $postID;
 
@@ -54,9 +58,18 @@ abstract class EmbeddedObject
                 $embeddedObject->$var = filter_var($_POST[$var], FILTER_VALIDATE_BOOLEAN);
             } else {
                 if (isset($_POST[$var])) {
-                    $embeddedObject->$var = mp_dd_sanitize($_POST[$var]);
-                } elseif (isset($_POST[mp_dd_to_value($var)])) {
-                    $embeddedObject->$var = mp_dd_sanitize($_POST[mp_dd_to_value($var)]);
+                    if (in_array($var, self::HTML)) {
+                        $newValue = str_replace("\r\n", '<br/>', $_POST[$var]);
+                        $newValue = str_replace('<', '[', $newValue);
+                        $newValue = str_replace('>', ']', $newValue);
+                        $newValue = str_replace('"', '\'', $newValue);
+                        $newValue = stripslashes($newValue);
+                    } else {
+                        $newValue = mp_dd_sanitize($_POST[$var]);
+                    }
+                    $embeddedObject->$var = $newValue;
+                } elseif (isset($_POST[mp_dd_to_snake_case($var)])) {
+                    $embeddedObject->$var = mp_dd_sanitize($_POST[mp_dd_to_snake_case($var)]);
                 }
             }
         }
@@ -75,7 +88,16 @@ abstract class EmbeddedObject
         $objectVars     = json_decode($json, true);
         if ($objectVars) {
             foreach ($objectVars as $var => $value) {
-                $embeddedObject->$var = $value;
+                if (in_array($var, self::HTML)) {
+                    $newValue = str_replace('[br/]', "\r\n", $value);
+                    $newValue = str_replace('[', '<', $newValue);
+                    $newValue = str_replace(']', '>', $newValue);
+                    $newValue = str_replace('\'', '"', $newValue);
+                    $newValue = stripslashes($newValue);
+                } else {
+                    $newValue = $value;
+                }
+                $embeddedObject->$var = $newValue;
             }
         }
         return $embeddedObject;

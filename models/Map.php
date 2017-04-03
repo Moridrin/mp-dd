@@ -49,8 +49,10 @@ class Map extends EmbeddedObject
     public $temperature;
     public $illumination;
 
-    public $rooms;
-    public $encounters;
+    protected $map;
+
+    public $rooms = array();
+    public $encounters = array();
 
     #endregion
 
@@ -123,9 +125,24 @@ class Map extends EmbeddedObject
         return ob_get_clean();
     }
 
+    public function getMapEditor()
+    {
+        ob_start();
+        ?>
+        <table class="form-table">
+            <tr>
+                <th><label for="map">Map</label></th>
+                <td><textarea type="text" name="map" id="map" class="html-active"><?= $this->map ?></textarea></td>
+            </tr>
+        </table>
+        <?php
+        return ob_get_clean();
+    }
+
     public function getHTML($description)
     {
         ob_start();
+        echo($this->map);
         ?>
         <ul class="collapsible" id="test" data-collapsible="expandable">
             <li>

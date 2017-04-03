@@ -73,16 +73,24 @@ add_action('init', 'mp_dd_register_maps_taxonomy');
 
 function mp_dd_add_map_meta_boxes()
 {
-    add_meta_box('mp_dd_map_stats', 'Stats', 'mp_dd_map_stats', 'map', 'advanced', 'default');
+    add_meta_box('mp_dd_map_general', 'General', 'mp_dd_map_general', 'map', 'advanced', 'default');
+    add_meta_box('mp_dd_map_map', 'Map', 'mp_dd_map_map', 'map', 'advanced', 'default');
 }
 
 add_action('add_meta_boxes', 'mp_dd_add_map_meta_boxes');
 
-function mp_dd_map_stats()
+function mp_dd_map_general()
 {
     global $post;
     $map = Map::load($post->ID);
     echo $map->getGeneralEditor();
+}
+
+function mp_dd_map_map()
+{
+    global $post;
+    $map = Map::load($post->ID);
+    echo $map->getMapEditor();
 }
 
 /**
@@ -98,34 +106,6 @@ function mp_dd_save_map_meta($post_id, $post)
     }
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         return $post_id;
-    }
-    if (isset($_POST['aliases'])) {
-        $aliases = !empty($_POST['aliases']) ? explode(',', $_POST['aliases']) : array();
-        global $wpdb;
-        /** @noinspection PhpIncludeInspection */
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        $table_name = $wpdb->prefix . "mp_map_aliases";
-        $wpdb->delete($table_name, array('post_id' => $post_id));
-        $nogo_list = mp_dd_get_available_tags(true);
-
-        $correct_aliases = array();
-        foreach ($aliases as $alias) {
-            if (!in_array(strtolower($alias), $nogo_list)) {
-                $wpdb->insert(
-                    $table_name,
-                    array(
-                        'alias'   => strtolower($alias),
-                        'post_id' => $post_id,
-                    ),
-                    array(
-                        '%s',
-                        '%d',
-                    )
-                );
-                $correct_aliases[] = $alias;
-            }
-        }
-        update_post_meta($post->ID, 'aliases', implode(',', $correct_aliases));
     }
     $map = Map::fromPOST($post_id);
     $map->save();
