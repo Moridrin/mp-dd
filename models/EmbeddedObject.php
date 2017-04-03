@@ -53,7 +53,11 @@ abstract class EmbeddedObject
             } elseif (is_bool($value)) {
                 $embeddedObject->$var = filter_var($_POST[$var], FILTER_VALIDATE_BOOLEAN);
             } else {
-                $embeddedObject->$var = mp_dd_sanitize($_POST[$var]);
+                if (isset($_POST[$var])) {
+                    $embeddedObject->$var = mp_dd_sanitize($_POST[$var]);
+                } elseif (isset($_POST[mp_dd_to_value($var)])) {
+                    $embeddedObject->$var = mp_dd_sanitize($_POST[mp_dd_to_value($var)]);
+                }
             }
         }
         $embeddedObject->postID = $postID;

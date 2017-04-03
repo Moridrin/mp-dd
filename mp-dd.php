@@ -20,11 +20,14 @@ require_once 'custom-types/creature/property-group-post-type.php';
 require_once 'custom-types/item/item-post-type.php';
 require_once 'custom-types/item/weapon-post-type.php';
 require_once 'custom-types/item/armor-post-type.php';
+require_once 'custom-types/map/map-post-type.php';
+require_once 'custom-types/map/map-content.php';
 
 require_once 'models/EmbeddedObject.php';
 require_once 'models/Creature.php';
 require_once 'models/PropertyGroup.php';
 require_once 'models/items/Item.php';
+require_once 'models/Map.php';
 
 function mp_dd_register_mp_dd()
 {
