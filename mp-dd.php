@@ -28,7 +28,6 @@ require_once 'models/EmbeddedObject.php';
 require_once 'models/Creature.php';
 require_once 'models/PropertyGroup.php';
 require_once 'models/items/Item.php';
-require_once 'models/Map.php';
 
 function mp_dd_register_mp_dd()
 {

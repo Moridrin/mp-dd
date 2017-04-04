@@ -12,7 +12,11 @@ function mp_dd_custom_map_content($content)
     if ($post->post_type != 'map') {
         return $content;
     }
-    return $content;
+    ob_start();
+    echo get_post_meta($post->ID, 'map', true);
+    echo get_post_meta($post->ID, 'info', true);
+    echo get_post_meta($post->ID, 'rooms', true);
+    return ob_get_clean() . $content;
 }
 
 add_filter('the_content', 'mp_dd_custom_map_content');
