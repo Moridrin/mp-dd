@@ -226,4 +226,9 @@ class Map extends EmbeddedObject
         <?php
         return ob_get_clean() . $description;
     }
+
+    public function setMap($map)
+    {
+        $this->map = $map;
+    }
 }

@@ -73,24 +73,21 @@ add_action('init', 'mp_dd_register_maps_taxonomy');
 
 function mp_dd_add_map_meta_boxes()
 {
-    add_meta_box('mp_dd_map_general', 'General', 'mp_dd_map_general', 'map', 'advanced', 'default');
-    add_meta_box('mp_dd_map_map', 'Map', 'mp_dd_map_map', 'map', 'advanced', 'default');
+    add_meta_box('mp_dd_map_import', 'Import', 'mp_dd_map_import', 'map', 'advanced', 'default');
 }
 
 add_action('add_meta_boxes', 'mp_dd_add_map_meta_boxes');
 
-function mp_dd_map_general()
+function mp_dd_map_import()
 {
-    global $post;
-    $map = Map::load($post->ID);
-    echo $map->getGeneralEditor();
-}
-
-function mp_dd_map_map()
-{
-    global $post;
-    $map = Map::load($post->ID);
-    echo $map->getMapEditor();
+    $image_library_url = get_upload_iframe_src('media', null, 'type');
+    //$image_library_url = remove_query_arg( array('TB_iframe'), $image_library_url );
+    //$image_library_url = add_query_arg( array( 'context' => 'shiba-gallery-html-file', 'TB_iframe' => 1 ), $image_library_url );
+    ?>
+    <p>
+        <a title="Upload File" href="<?php echo esc_url($image_library_url); ?>" id="upload-html-file" class="button thickbox">Upload File</a>
+    </p>
+    <?php
 }
 
 /**
@@ -107,9 +104,25 @@ function mp_dd_save_map_meta($post_id, $post)
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         return $post_id;
     }
-    $map = Map::fromPOST($post_id);
-    $map->save();
+    $currentContent = $post->post_content;
+    $newContent     = DonjonConverter::Convert('http://local.moridrin.com/wp-content/uploads/2017/04/Skullsmasherz-Hideout-01-6.html');
+    if ($currentContent != $newContent) {
+        $post->post_content = $newContent;
+        wp_update_post($post);
+    }
     return $post_id;
 }
 
 add_action('save_post_map', 'mp_dd_save_map_meta', 1, 2);
+
+function filter_wp_handle_upload($array, $var)
+{
+    if ($array['type'] == 'text/html') {
+//        DonjonConverter::Convert($array['url']);
+    }
+    return $array;
+}
+
+// add the filter
+add_filter('wp_handle_upload', 'filter_wp_handle_upload', 10, 2);
+

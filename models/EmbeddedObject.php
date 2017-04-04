@@ -10,7 +10,7 @@ abstract class EmbeddedObject
 {
     const HTML
         = array(
-            'map',
+//            'map',
         );
     /** @var int $post */
     public $postID;
@@ -86,6 +86,7 @@ abstract class EmbeddedObject
     {
         $embeddedObject = new static;
         $objectVars     = json_decode($json, true);
+        mp_dd_var_export($objectVars);
         if ($objectVars) {
             foreach ($objectVars as $var => $value) {
                 if (in_array($var, self::HTML)) {
@@ -97,6 +98,8 @@ abstract class EmbeddedObject
                 } else {
                     $newValue = $value;
                 }
+                mp_dd_var_export($var);
+                mp_dd_var_export($newValue);
                 $embeddedObject->$var = $newValue;
             }
         }

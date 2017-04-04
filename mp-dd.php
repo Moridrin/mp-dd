@@ -14,6 +14,7 @@ ini_set('display_errors', 1);
 error_reporting(-1);
 require_once 'functions.php';
 require_once 'all-content-filter.php';
+require_once 'DonjonConverter.php';
 
 require_once 'custom-types/creature/creature-post-type.php';
 require_once 'custom-types/creature/property-group-post-type.php';

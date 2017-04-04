@@ -12,8 +12,7 @@ function mp_dd_custom_map_content($content)
     if ($post->post_type != 'map') {
         return $content;
     }
-    $map = Map::load($post->ID);
-    return $map->getHTML($content);
+    return $content;
 }
 
 add_filter('the_content', 'mp_dd_custom_map_content');
