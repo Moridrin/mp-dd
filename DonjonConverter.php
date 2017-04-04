@@ -27,11 +27,13 @@ abstract class DonjonConverter
 
     private static function parseMap()
     {
-        $file         = self::$file;
-        $finder       = new DomXPath($file);
-        $mapNode      = $finder->query("//*[contains(@class, 'map')]")->item(0);
+        $file    = self::$file;
+        $finder  = new DomXPath($file);
+        $mapNode = $finder->query("//*[contains(@class, 'map')]")->item(0);
+        $mapNode->setAttribute('class', $mapNode->getAttribute('class') . ' center-align');
         $returnString = $file->saveHTML($mapNode);
         $legendNode   = $finder->query("//*[contains(@class, 'legend')]")->item(0);
+        $legendNode->setAttribute('class', $legendNode->getAttribute('class') . ' center-align');
         $returnString .= $file->saveHTML($legendNode);
         $linksNode    = $file->getElementById('dungeon');
         $newLinksNode = $file->createElement('map');
