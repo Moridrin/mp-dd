@@ -41,8 +41,10 @@ abstract class DonjonConverter
         $mapNode->setAttribute('class', $mapNode->getAttribute('class') . ' center-align');
         $map        = $file->saveHTML($mapNode);
         $legendNode = $finder->query("//*[contains(@class, 'legend')]")->item(0);
-        $legendNode->setAttribute('class', $legendNode->getAttribute('class') . ' center-align');
-        $map          .= $file->saveHTML($legendNode);
+        if ($legendNode) {
+            $legendNode->setAttribute('class', $legendNode->getAttribute('class') . ' center-align');
+            $map .= $file->saveHTML($legendNode);
+        }
         $linksNode    = $file->getElementById('dungeon');
         $newLinksNode = $file->createElement('map');
         $newLinksNode->setAttribute('id', 'dungeon');

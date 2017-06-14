@@ -14,16 +14,13 @@
  */
 function mp_dd_to_camel_case($string, $capitalizeFirstCharacter = false)
 {
-    $string = preg_replace('/(?<!\ )[A-Z]/', ' $0', $string);
-    $string = str_replace('-', ' ', $string);
-    $string = str_replace('_', ' ', $string);
-    $str    = str_replace(' ', '', ucwords($string));
+    $string    = str_replace(' ', '', mp_dd_to_title($string));
 
     if (!$capitalizeFirstCharacter) {
-        $str[0] = strtolower($str[0]);
+        $string[0] = strtolower($string[0]);
     }
 
-    return $str;
+    return $string;
 }
 
 /**
