@@ -1,11 +1,46 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: moridrin
- * Date: 27-2-17
- * Time: 8:27
- */
+use mp_dd\MP_DD;
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+#region Register
+function mp_dd_register_plugin()
+{
+    MP_DD::resetOptions();
+}
+
+register_activation_hook(MP_DD_PATH . 'mp-dd.php', 'mp_dd_register_plugin');
+#endregion
+
+#region Unregister
+function mp_dd_unregister()
+{
+    //Nothing to do
+}
+
+register_deactivation_hook(MP_DD_PATH . 'mp-dd.php', 'mp_dd_unregister');
+#endregion
+
+#region Reset Options
+/**
+ * This function will reset the events options if the admin referer originates from the SSV Events plugin.
+ *
+ * @param $admin_referer
+ */
+function mp_dd_reset_options($admin_referer)
+{
+    if (!mp_dd_starts_with($admin_referer, 'mp_dd__')) {
+        return;
+    }
+    MP_DD::resetOptions();
+}
+
+add_filter(MP_DD::HOOK_RESET_OPTIONS, 'mp_dd_reset_options');
+#endregion
+
+#region Functions that should be in PHP
 /**
  * @param string $string
  * @param bool   $capitalizeFirstCharacter
@@ -65,104 +100,37 @@ function mp_dd_to_value($string)
 }
 
 /**
- * This function is for development purposes only and lets the developer print a variable in the PHP formatting to inspect what the variable is set to.
+ * @param $haystack
+ * @param $needle
+ * @param $replacement
+ * @param $position
  *
- * @param mixed $variable any variable that you want to be printed.
- * @param bool  $die      set true if you want to call die() after the print. $die is ignored if $return is true.
- * @param bool  $return   set true if you want to return the print as string.
- * @param bool  $newline  set false if you don't want to print a newline at the end of the print.
- *
- * @return mixed|null|string returns the print in string if $return is true, returns null if $return is false, and doesn't return if $die is true.
+ * @return mixed
  */
-function mp_dd_var_export($variable, $die = false, $return = false, $newline = true)
+function mp_dd_replace_at_pos($haystack, $needle, $replacement, $position)
 {
-    if (mp_dd_has_circular_reference($variable)) {
-        ob_start();
-        var_dump($variable);
-        $var_dump = ob_get_clean();
-        $print    = highlight_string("<?php " . $var_dump, true);
-    } else {
-        $print = highlight_string("<?php " . var_export($variable, true), true);
-    }
-    $print = trim($print);
-    $print = preg_replace("|^\\<code\\>\\<span style\\=\"color\\: #[a-fA-F0-9]{0,6}\"\\>|", "", $print, 1);  // remove prefix
-    $print = preg_replace("|\\</code\\>\$|", "", $print, 1);
-    $print = trim($print);
-    $print = preg_replace("|\\</span\\>\$|", "", $print, 1);
-    $print = trim($print);
-    $print = preg_replace("|^(\\<span style\\=\"color\\: #[a-fA-F0-9]{0,6}\"\\>)(&lt;\\?php&nbsp;)(.*?)(\\</span\\>)|", "\$1\$3\$4", $print);
-    $print .= ';';
-    if ($return) {
-        return $print;
-    } else {
-        echo $print;
-        if ($newline) {
-            echo '<br/>';
-        }
-    }
-
-    if ($die) {
-        die();
-    }
-    return null;
+    return substr_replace($haystack, $replacement, $position, strlen($needle));
 }
 
 /**
- * This function checks if the given $variable is recursive.
+ * @param $haystack
+ * @param $needle
  *
- * @param mixed $variable is the variable to be checked.
- *
- * @return bool true if the $variable contains circular reference.
+ * @return bool
  */
-function mp_dd_has_circular_reference($variable)
+function mp_dd_starts_with($haystack, $needle)
 {
-    $dump = print_r($variable, true);
-    if (strpos($dump, '*RECURSION*') !== false) {
-        return true;
-    } else {
-        return false;
-    }
+    return $needle === '' || strrpos($haystack, $needle, -strlen($haystack)) !== false;
 }
 
-function mp_dd_sanitize($value)
+/**
+ * @param $haystack
+ * @param $needle
+ *
+ * @return bool
+ */
+function mp_dd_ends_with($haystack, $needle)
 {
-    if (is_array($value)) {
-        return $value;
-    }
-    $value = stripslashes($value);
-    $value = esc_attr($value);
-    $value = sanitize_text_field($value);
-    return $value;
+    return $needle === '' || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== false);
 }
-
-function mp_dd_get_available_tags($include_aliases = false)
-{
-    global $wpdb;
-    /** @noinspection PhpIncludeInspection */
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    $used_tags     = array();
-    $existing_tags = $wpdb->get_results("SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'creature' AND post_status = 'publish'");
-    foreach ($existing_tags as $alias) {
-        $used_tags[$alias->ID] = strtolower($alias->post_title);
-        if ($include_aliases) {
-            foreach (mp_dd_get_aliases_for_post($alias->ID) as $item) {
-                $used_tags[$alias->ID . '_alias_' . $item] = $item;
-            }
-        }
-    }
-    return $used_tags;
-}
-
-function mp_dd_get_aliases_for_post($post_id)
-{
-    global $wpdb;
-    /** @noinspection PhpIncludeInspection */
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    $used_tags     = array();
-    $table_name    = $wpdb->prefix . "mp_creature_aliases";
-    $existing_tags = $wpdb->get_results("SELECT alias FROM {$table_name} WHERE post_id = {$post_id}");
-    foreach ($existing_tags as $alias) {
-        $used_tags[] = strtolower($alias->alias);
-    }
-    return $used_tags;
-}
+#endregion
