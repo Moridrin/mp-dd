@@ -54,24 +54,4 @@ class City
         return $this->post->post_title;
     }
     #endregion
-
-    #region isValid()
-    /**
-     * @return bool true if the City is valid (all mandatory fields are filled).
-     */
-    public function isValid()
-    {
-        return true;
-    }
-    #endregion
-
-    #region isPublished()
-    /**
-     * @return bool true if the City is published
-     */
-    public function isPublished()
-    {
-        return $this->post->post_status == 'publish';
-    }
-    #endregion
 }

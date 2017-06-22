@@ -24,6 +24,10 @@ define('MP_DD_URL', plugins_url() . '/mp-dd/');
 #region Require Once
 require_once 'functions.php';
 
+require_once 'include/JSLikeHTMLElement.php';
+
+require_once 'models/City.php';
+
 require_once 'custom-post-type/city.php';
 #endregion
 
