@@ -188,18 +188,32 @@ function mp_dd_buildings()
  *
  * @return int the post_id
  */
-function mp_dd_save_meta($post_id)
+function mp_dd_save_city_meta($post_id)
 {
     if (!current_user_can('edit_post', $post_id)) {
         return $post_id;
     }
-    //TODO Save
+    $id        = 1;
+    if (!get_post_meta($post_id, 'set_from_content', true)) {
+        $buildings = array();
+        while (isset($_POST['building_' . $id . '_html'])) {
+            $buildingHTML = $_POST['building_' . $id . '_html'];
+            if (!empty($buildingHTML)) {
+                $buildings[] = $buildingHTML;
+            }
+            $id++;
+        }
+        update_post_meta($post_id, 'buildings', $buildings);
+    } else {
+        update_post_meta($post_id, 'set_from_content', false);
+    }
+
     return $post_id;
 }
 
-add_action('save_post_cities', 'mp_dd_save_meta');
+add_action('save_post_cities', 'mp_dd_save_city_meta');
 
-function filter_post_data($data)
+function mp_dd_filter_city_data($data)
 {
     global $post;
     $file = new DOMDocument();
@@ -214,12 +228,13 @@ function filter_post_data($data)
             $child = $buildingsContainer->childNodes->item($i);
             if ($child instanceof DOMElement) {
                 /** @noinspection PhpUndefinedFieldInspection */
-                $buildings[] = $child->innerHTML;
+                $buildings[] = $file->saveHTML($child);
             }
         }
         $buildingsContainer->innerHTML = '';
         update_post_meta($post->ID, 'buildings', $buildings);
-        $html                 = str_replace($file->saveHTML($buildingsContainer), MP_DD::HTML_BUILDINGS_PLACEHOLDER, $file->saveHTML());
+        update_post_meta($post->ID, 'set_from_content', true);
+        $html                 = str_replace($file->saveHTML($buildingsContainer), MP_DD::TAG_BUILDINGS, $file->saveHTML());
         $remove               = array(
             MP_DD::HTML_HEAD,
             '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">',
@@ -233,6 +248,21 @@ function filter_post_data($data)
     return $data;
 }
 
-add_filter('wp_insert_post_data', 'filter_post_data');
+add_filter('wp_insert_post_data', 'mp_dd_filter_city_data');
 
+#endregion
+
+#region Post Content
+function mp_dd_filter_city_content($content)
+{
+    if (strpos($content, MP_DD::TAG_BUILDINGS) !== false) {
+        global $post;
+        $buildings = get_post_meta($post->ID, 'buildings', true);
+        $content   = str_replace(MP_DD::TAG_BUILDINGS, implode('', $buildings), $content);
+    }
+
+    return $content;
+}
+
+add_filter('the_content', 'mp_dd_filter_city_content');
 #endregion
