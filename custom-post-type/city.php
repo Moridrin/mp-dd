@@ -130,13 +130,11 @@ add_action('add_meta_boxes', 'mp_dd_meta_boxes');
 function mp_dd_buildings()
 {
     global $post;
-    $file = new DOMDocument();
-    libxml_use_internal_errors(true);
-    $file->registerNodeClass('DOMElement', 'JSLikeHTMLElement');
-    $file->loadHTML('<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>' . $post->post_content);
+    $buildings = get_post_meta($post->ID, 'buildings', true);
     ?>
+    <!--suppress CssUnusedSymbol -->
     <style>
-        button.mp-dd-accordion {
+        button.accordion {
             background-color: #eee;
             color: #444;
             cursor: pointer;
@@ -149,7 +147,7 @@ function mp_dd_buildings()
             transition: 0.4s;
         }
 
-        button.mp-dd-accordion.active, button.mp-dd-accordion:hover {
+        button.accordion.active, button.accordion:hover {
             background-color: #ddd;
         }
 
@@ -167,19 +165,10 @@ function mp_dd_buildings()
     <script>
         <?php
         $buildingID = 1;
-        $buildings = $file->getElementById('buildings');
-
-        for ($i = 0; $i < $buildings->childNodes->length; $i++) {
-            $child = $buildings->childNodes->item($i);
-            if ($child instanceof DOMElement) {
-                mp_dd_var_export(json_encode($child->innerHTML), 1);
-                $html = json_encode($child->innerHTML);
-                echo "mp_dd_add_building($buildingID, $html, false);";
-                $buildingID++;
-            } elseif (!is_string($child)) {
-                echo get_class($child);
-                echo '<br/>';
-            }
+        foreach ($buildings as $building) {
+            $building = json_encode($building);
+            echo "mp_dd_add_building($buildingID, $building, false);";
+            $buildingID++;
         }
         ?>
         var fieldID = <?= $buildingID ?>;
@@ -212,43 +201,35 @@ add_action('save_post_cities', 'mp_dd_save_meta');
 
 function filter_post_data($data)
 {
+    global $post;
     $file = new DOMDocument();
     libxml_use_internal_errors(true);
     $file->registerNodeClass('DOMElement', 'JSLikeHTMLElement');
-    $file->loadHTML('<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>' . stripslashes($data['post_content']));
+    $file->loadHTML(MP_DD::HTML_HEAD . stripslashes($data['post_content']));
+
+    $buildings          = array();
     $buildingsContainer = $file->getElementById('buildings');
-    $body = $file->getElementsByTagName('body')->item(0);
-    if ($buildingsContainer == null) {
-        if ($body == null) {
-            $body = $file->createElement('body');
-            $file->appendChild($body);
-        }
-        $buildingsContainer = $file->createElement('div');
-        $buildingsContainer->setAttribute('id', 'buildings');
-        $body->appendChild($buildingsContainer);
-    }
-
-    $id = 1;
-    while (isset($_POST['building_' . $id . '_html'])) {
-        $building = $file->getElementById("modal_$id");
-        $newBuildingHTML = $_POST['building_' . $id . '_html'];
-        if (empty($newBuildingHTML)) {
-            if ($building != null) {
-                $buildingsContainer->removeChild($building);
+    if ($buildingsContainer != null) {
+        for ($i = 0; $i < $buildingsContainer->childNodes->length; $i++) {
+            $child = $buildingsContainer->childNodes->item($i);
+            if ($child instanceof DOMElement) {
+                /** @noinspection PhpUndefinedFieldInspection */
+                $buildings[] = $child->innerHTML;
             }
-        } else {
-            if ($building == null) {
-                $building = $file->createElement('div');
-                $building->setAttribute('id', "modal_$id");
-                $building->setAttribute('class', 'modal modal-fixed-footer');
-                $buildingsContainer->appendChild($building);
-            }
-            $building->innerHTML = stripslashes($newBuildingHTML);
         }
-        $id++;
+        $buildingsContainer->innerHTML = '';
+        update_post_meta($post->ID, 'buildings', $buildings);
+        $html                 = str_replace($file->saveHTML($buildingsContainer), MP_DD::HTML_BUILDINGS_PLACEHOLDER, $file->saveHTML());
+        $remove               = array(
+            MP_DD::HTML_HEAD,
+            '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">',
+            '<html>',
+            '</html>',
+            '<body>',
+            '</body>',
+        );
+        $data['post_content'] = addslashes(str_replace($remove, '', $html));
     }
-
-    $data['post_content'] = addslashes(str_replace('&#13;', '', $body->innerHTML));
     return $data;
 }
 

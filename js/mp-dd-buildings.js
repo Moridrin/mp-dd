@@ -11,7 +11,7 @@ function mp_dd_add_building(fieldID, fieldHTML, show) {
     var button = document.createElement("button");
     button.setAttribute("id", "building_header_" + fieldID);
     button.setAttribute("type", "button");
-    button.setAttribute("class", "mp-dd-accordion");
+    button.setAttribute("class", "accordion");
     button.innerHTML = "Building " + fieldID;
     button.setAttribute("onclick", "mp_dd_set_accordion_click_event()");
     buildingDiv.appendChild(button);
@@ -52,7 +52,7 @@ function getBuildingHTML(fieldID, value) {
     var buildingHTML = document.createElement("textarea");
     buildingHTML.setAttribute("id", fieldID + "_html");
     buildingHTML.setAttribute("name", "building_" + fieldID + "_html");
-    buildingHTML.setAttribute("style", "width: 100%;");
+    buildingHTML.setAttribute("style", "width: 100%; height: 150px;");
     if (value) {
         buildingHTML.innerHTML = value;
     }
