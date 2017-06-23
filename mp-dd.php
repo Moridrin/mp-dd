@@ -43,7 +43,6 @@ class MP_DD
 
     const OPTION_PUBLISH_ERROR = 'mp_dd__option_publish_error';
 
-    const HTML_HEAD = '<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>';
     const TAG_BUILDINGS = '[mp_dd_buildings]';
     #endregion
 

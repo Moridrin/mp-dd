@@ -88,14 +88,27 @@ add_action('init', 'mp_dd_cities_post');
 #region Save City
 function mp_dd_filter_city_data($data)
 {
+    global $post;
+    if ($post == null || $post->post_type != 'cities' || empty($data['post_content'])) {
+        return $data;
+    }
     global $wpdb;
     $file = new DOMDocument();
     libxml_use_internal_errors(true);
     $file->registerNodeClass('DOMElement', 'JSLikeHTMLElement');
-    $file->loadHTML(MP_DD::HTML_HEAD . stripslashes($data['post_content']));
+    $file->loadHTML((stripslashes($data['post_content'])));
 
     $buildingsContainer = $file->getElementById('buildings');
     if ($buildingsContainer != null) {
+        $remove               = array(
+            '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">',
+            '<html>',
+            '</html>',
+            '<body>',
+            '</body>',
+            '&Atilde;&#130;&Acirc;&nbsp;',
+            '&#13;',
+        );
         $buildings = array();
         for ($i = 0; $i < $buildingsContainer->childNodes->length; $i++) {
             $child = $buildingsContainer->childNodes->item($i);
@@ -106,7 +119,7 @@ function mp_dd_filter_city_data($data)
                 $title = $titleElement->innerHTML;
                 $child->childNodes->item(0)->removeChild($titleElement);
                 /** @noinspection PhpUndefinedFieldInspection */
-                $buildingContent = $child->childNodes->item(0)->innerHTML;
+                $buildingContent = utf8_decode($child->childNodes->item(0)->innerHTML);
                 $found           = $wpdb->get_row("SELECT ID FROM $wpdb->posts WHERE post_content = '$buildingContent'");
                 if (isset($found->ID)) {
                     $postID = $found->ID;
@@ -127,26 +140,17 @@ function mp_dd_filter_city_data($data)
                 );
             }
         }
-        $file->loadHTML(MP_DD::HTML_HEAD . utf8_encode(stripslashes($data['post_content'])));
+        $file->loadHTML(utf8_encode(stripslashes($data['post_content'])));
         $buildingsContainer = $file->getElementById('buildings');
         $buildingsContainer->parentNode->removeChild($buildingsContainer);
         $html = $file->saveHTML();
 
-        $remove               = array(
-            MP_DD::HTML_HEAD,
-            '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">',
-            '<html>',
-            '</html>',
-            '<body>',
-            '</body>',
-        );
-        $data['post_content'] = addslashes(str_replace($remove, '', $html));
         foreach ($buildings as $building) {
             $modalID = $building['modal_id'];
-            $postID = $building['post_id'];
-            $data['post_content'] = str_replace("href=\"#$modalID\"", utf8_encode("href=\"[building-url-$postID]\""), $data['post_content']);
+            $postID  = $building['post_id'];
+            $html    = str_replace("href=\"#$modalID\"", "href=\"[building-url-$postID]\"", $html);
         }
-        $data['post_content'] = utf8_decode($data['post_content']);
+        $data['post_content'] = addslashes(str_replace($remove, '', $html));
     }
     return $data;
 }
