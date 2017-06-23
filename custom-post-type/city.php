@@ -6,36 +6,13 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-#region Admin Notice
-/**
- * This function displays the error message thrown by the Save or Update actions of an City.
- */
-function mp_dd_admin_notice()
-{
-    $screen = get_current_screen();
-    if ('cities' != $screen->post_type || 'post' != $screen->base) {
-        return;
-    }
-    if (get_option(MP_DD::OPTION_PUBLISH_ERROR, false)) {
-        ?>
-        <div class="notice notice-error">
-            <p>You cannot publish an city without a start date and time!</p>
-        </div>
-        <?php
-    }
-    update_option(MP_DD::OPTION_PUBLISH_ERROR, false);
-}
-
-add_action('admin_notices', 'mp_dd_admin_notice');
-#endregion
-
 #region Updated Messages
 /**
  * @param string[] $messages is an array of messages displayed after a city is updated.
  *
  * @return string[] the messages.
  */
-function mp_dd_updated_messages($messages)
+function mp_dd_updated_cities_messages($messages)
 {
     global $post, $post_ID;
     /** @noinspection HtmlUnknownTarget */
@@ -56,14 +33,14 @@ function mp_dd_updated_messages($messages)
     return $messages;
 }
 
-add_filter('post_updated_messages', 'mp_dd_updated_messages');
+add_filter('post_updated_messages', 'mp_dd_updated_cities_messages');
 #endregion
 
 #region Post Category
 /**
  * This method initializes the post category functionality for Cities
  */
-function mp_dd_post_category()
+function mp_dd_cities_post()
 {
 
     $labels = array(
@@ -105,136 +82,56 @@ function mp_dd_post_category()
     register_post_type('cities', $args);
 }
 
-add_action('init', 'mp_dd_post_category');
+add_action('init', 'mp_dd_cities_post');
 #endregion
 
-#region Meta Boxes
-function mp_dd_edit_form_after_title()
-{
-    global $post;
-    do_meta_boxes(get_current_screen(), 'after_title', $post);
-}
-
-add_action('edit_form_after_title', 'mp_dd_edit_form_after_title');
-
-/**
- * This method adds the custom Meta Boxes
- */
-function mp_dd_meta_boxes()
-{
-    add_meta_box('mp_dd_buildings', 'Buildings', 'mp_dd_buildings', 'cities', 'after_title', 'high');
-}
-
-add_action('add_meta_boxes', 'mp_dd_meta_boxes');
-
-function mp_dd_buildings()
-{
-    global $post;
-    $buildings = get_post_meta($post->ID, 'buildings', true);
-    ?>
-    <!--suppress CssUnusedSymbol -->
-    <style>
-        button.accordion {
-            background-color: #eee;
-            color: #444;
-            cursor: pointer;
-            padding: 18px;
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 15px;
-            transition: 0.4s;
-        }
-
-        button.accordion.active, button.accordion:hover {
-            background-color: #ddd;
-        }
-
-        div.panel {
-            padding: 0 18px;
-            background-color: white;
-            display: none;
-        }
-    </style>
-    <div id="test" style="margin: 10px 0;">
-        <div id="buildings-placeholder" class="sortable"></div>
-    </div>
-    <button type="button" onclick="mp_dd_add_new_building()">Add building</button>
-    <!--suppress JSUnusedLocalSymbols -->
-    <script>
-        <?php
-        $buildingID = 1;
-        foreach ($buildings as $building) {
-            $building = json_encode($building);
-            echo "mp_dd_add_building($buildingID, $building, false);";
-            $buildingID++;
-        }
-        ?>
-        var fieldID = <?= $buildingID ?>;
-        function mp_dd_add_new_building() {
-            mp_dd_add_building(fieldID, "", true);
-            fieldID++;
-        }
-    </script>
-    <?php
-}
-
-#endregion
-
-#region Save Meta
-/**
- * @param $post_id
- *
- * @return int the post_id
- */
-function mp_dd_save_city_meta($post_id)
-{
-    if (!current_user_can('edit_post', $post_id)) {
-        return $post_id;
-    }
-    $id        = 1;
-    if (!get_post_meta($post_id, 'set_from_content', true)) {
-        $buildings = array();
-        while (isset($_POST['building_' . $id . '_html'])) {
-            $buildingHTML = $_POST['building_' . $id . '_html'];
-            if (!empty($buildingHTML)) {
-                $buildings[] = $buildingHTML;
-            }
-            $id++;
-        }
-        update_post_meta($post_id, 'buildings', $buildings);
-    } else {
-        update_post_meta($post_id, 'set_from_content', false);
-    }
-
-    return $post_id;
-}
-
-add_action('save_post_cities', 'mp_dd_save_city_meta');
-
+#region Save City
 function mp_dd_filter_city_data($data)
 {
-    global $post;
+    global $wpdb;
     $file = new DOMDocument();
     libxml_use_internal_errors(true);
     $file->registerNodeClass('DOMElement', 'JSLikeHTMLElement');
     $file->loadHTML(MP_DD::HTML_HEAD . stripslashes($data['post_content']));
 
-    $buildings          = array();
     $buildingsContainer = $file->getElementById('buildings');
     if ($buildingsContainer != null) {
+        $buildings = array();
         for ($i = 0; $i < $buildingsContainer->childNodes->length; $i++) {
             $child = $buildingsContainer->childNodes->item($i);
             if ($child instanceof DOMElement) {
+                $modalID      = $child->getAttribute('id');
+                $titleElement = $child->childNodes->item(0)->childNodes->item(0);
                 /** @noinspection PhpUndefinedFieldInspection */
-                $buildings[] = $file->saveHTML($child);
+                $title = $titleElement->innerHTML;
+                $child->childNodes->item(0)->removeChild($titleElement);
+                /** @noinspection PhpUndefinedFieldInspection */
+                $buildingContent = $child->childNodes->item(0)->innerHTML;
+                $found           = $wpdb->get_row("SELECT ID FROM $wpdb->posts WHERE post_content = '$buildingContent'");
+                if (isset($found->ID)) {
+                    $postID = $found->ID;
+                } else {
+                    $postID = wp_insert_post(
+                        array(
+                            'post_title'   => $title,
+                            'post_content' => $buildingContent,
+                            'post_type'    => 'buildings',
+                        )
+                    );
+                }
+                $buildings[] = array(
+                    'modal_id'     => $modalID,
+                    'post_id'      => $postID,
+                    'post_title'   => $title,
+                    'post_content' => $buildingContent,
+                );
             }
         }
-        $buildingsContainer->innerHTML = '';
-        update_post_meta($post->ID, 'buildings', $buildings);
-        update_post_meta($post->ID, 'set_from_content', true);
-        $html                 = str_replace($file->saveHTML($buildingsContainer), MP_DD::TAG_BUILDINGS, $file->saveHTML());
+        $file->loadHTML(MP_DD::HTML_HEAD . utf8_encode(stripslashes($data['post_content'])));
+        $buildingsContainer = $file->getElementById('buildings');
+        $buildingsContainer->parentNode->removeChild($buildingsContainer);
+        $html = $file->saveHTML();
+
         $remove               = array(
             MP_DD::HTML_HEAD,
             '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">',
@@ -244,6 +141,12 @@ function mp_dd_filter_city_data($data)
             '</body>',
         );
         $data['post_content'] = addslashes(str_replace($remove, '', $html));
+        foreach ($buildings as $building) {
+            $modalID = $building['modal_id'];
+            $postID = $building['post_id'];
+            $data['post_content'] = str_replace("href=\"#$modalID\"", utf8_encode("href=\"[building-url-$postID]\""), $data['post_content']);
+        }
+        $data['post_content'] = utf8_decode($data['post_content']);
     }
     return $data;
 }

@@ -29,6 +29,7 @@ require_once 'include/JSLikeHTMLElement.php';
 require_once 'models/City.php';
 
 require_once 'custom-post-type/city.php';
+require_once 'custom-post-type/building.php';
 #endregion
 
 #region SSV_Users class

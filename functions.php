@@ -47,6 +47,14 @@ function mp_dd_enquire_admin_scripts()
 
 add_action('admin_enqueue_scripts', 'mp_dd_enquire_admin_scripts', 12);
 
+function mp_dd_edit_form_after_title()
+{
+    global $post;
+    do_meta_boxes(get_current_screen(), 'after_title', $post);
+}
+
+add_action('edit_form_after_title', 'mp_dd_edit_form_after_title');
+
 #region Functions that should be in PHP
 /**
  * @param string $string
@@ -153,6 +161,9 @@ function mp_dd_ends_with($haystack, $needle)
  */
 function mp_dd_var_export($variable, $die = false, $return = false, $newline = true)
 {
+    if ($variable instanceof DOMElement) {
+        $variable = $variable->ownerDocument->saveHTML($variable);
+    }
     if (mp_dd_has_circular_reference($variable)) {
         ob_start();
         var_dump($variable);
