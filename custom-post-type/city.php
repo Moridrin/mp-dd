@@ -100,15 +100,6 @@ function mp_dd_filter_city_data($data)
 
     $buildingsContainer = $file->getElementById('buildings');
     if ($buildingsContainer != null) {
-        $remove               = array(
-            '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">',
-            '<html>',
-            '</html>',
-            '<body>',
-            '</body>',
-            '&Atilde;&#130;&Acirc;&nbsp;',
-            '&#13;',
-        );
         $buildings = array();
         for ($i = 0; $i < $buildingsContainer->childNodes->length; $i++) {
             $child = $buildingsContainer->childNodes->item($i);
@@ -129,6 +120,7 @@ function mp_dd_filter_city_data($data)
                             'post_title'   => $title,
                             'post_content' => $buildingContent,
                             'post_type'    => 'buildings',
+                            'post_status'  => 'publish',
                         )
                     );
                 }
@@ -150,7 +142,7 @@ function mp_dd_filter_city_data($data)
             $postID  = $building['post_id'];
             $html    = str_replace("href=\"#$modalID\"", "href=\"[building-url-$postID]\"", $html);
         }
-        $data['post_content'] = addslashes(str_replace($remove, '', $html));
+        $data['post_content'] = addslashes(str_replace(MP_DD::REMOVE_HTML, '', $html));
     }
     return $data;
 }
