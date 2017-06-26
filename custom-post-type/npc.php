@@ -92,9 +92,20 @@ add_action('init', 'mp_dd_npcs_post');
 function mp_dd_npc_meta_boxes()
 {
     add_meta_box('mp_dd_npc_info', 'Info', 'mp_dd_npc_info', 'npcs', 'after_title', 'high');
+    add_meta_box('mp_dd_npc_include_tag', 'Tags', 'mp_dd_npc_include_tag', 'npcs', 'after_title', 'normal');
 }
 
 add_action('add_meta_boxes', 'mp_dd_npc_meta_boxes');
+
+function mp_dd_npc_include_tag()
+{
+    global $post;
+    ?>
+    <p>You can insert one of these tags in a post to include the npc.</p>
+    <p><code>[npc-<?= $post->ID ?>]</code> place this somewhere you want to display the NPC.</p>
+    <p><code>[npc-<?= $post->ID ?>-li]</code> place this inside a &lt;ul&gt; block where you want to display the NPC (as collection item).</p>
+    <?php
+}
 
 function mp_dd_npc_info()
 {
@@ -219,6 +230,39 @@ add_action('save_post_npcs', 'mp_dd_npc_save_meta');
 #region Post Content
 function mp_dd_filter_npc_content($content)
 {
+    if (preg_match_all("/\[npc-([0-9]+)\]/", $content, $npcURLMatches)) {
+        foreach ($npcURLMatches[1] as $npcID) {
+            $npc = get_post($npcID);
+            $html = '<h3>' . $npc->post_title . '</h3>';
+            $html .= '<p>';
+            $html .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
+            $html .= $npc->post_content . '<br/>';
+            $html .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
+            $html .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
+            $html .= '</p>';
+            $content  = str_replace("[npc-$npcID]", $html, $content);
+        }
+    }
+    if (preg_match_all("/\[npc-([0-9]+)-li\]/", $content, $npcURLMatches)) {
+        foreach ($npcURLMatches[1] as $npcID) {
+            $npc = get_post($npcID);
+            $html = '<li>';
+            $html .= '<div class="collapsible-header">';
+            $html .= $npc->post_title;
+            $html .= '</div>';
+            $html .= '<div class="collapsible-body">';
+            $html .= '<p>';
+            $html .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
+            $html .= $npc->post_content . '<br/>';
+            $html .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
+            $html .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
+            $html .= '</p>';
+            $html .= '</div>';
+            $html .= '</li>';
+            $content  = str_replace("[npc-$npcID-li]", $html, $content);
+        }
+    }
+
     return $content;
 }
 

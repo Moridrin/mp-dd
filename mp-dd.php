@@ -28,8 +28,9 @@ require_once 'include/JSLikeHTMLElement.php';
 
 require_once 'models/City.php';
 
-require_once 'custom-post-type/building.php';
 require_once 'custom-post-type/city.php';
+require_once 'custom-post-type/map.php';
+require_once 'custom-post-type/building.php';
 require_once 'custom-post-type/npc.php';
 
 require_once 'options/options.php';
@@ -45,22 +46,6 @@ class MP_DD
     const HOOK_RESET_OPTIONS = 'mp_dd__hook_reset_options';
 
     const OPTION_PUBLISH_ERROR = 'mp_dd__option_publish_error';
-
-    const TAG_BUILDINGS = '[mp_dd_buildings]';
-
-    const REMOVE_HTML
-        = array(
-            '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">',
-            '<html>',
-            '</html>',
-            '<body>',
-            '</body>',
-            '&Atilde;',
-            '&#130;',
-            '&Acirc;',
-            '&nbsp;',
-            '&#13;',
-        );
     #endregion
 
     #region resetOptions()

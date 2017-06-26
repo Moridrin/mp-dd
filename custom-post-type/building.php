@@ -1,7 +1,5 @@
 <?php
 
-use mp_dd\MP_DD;
-
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -63,7 +61,7 @@ function mp_dd_buildings_post()
         'hierarchical'        => true,
         'description'         => 'Buildings filterable by category',
         'supports'            => array('title', 'editor', 'author', 'thumbnail', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'page-attributes'),
-        'taxonomies'          => array(),
+        'taxonomies'          => array('building_category'),
         'public'              => true,
         'show_ui'             => true,
         'show_in_menu'        => true,
@@ -85,18 +83,42 @@ function mp_dd_buildings_post()
 add_action('init', 'mp_dd_buildings_post');
 #endregion
 
+#region Category Taxonomy
+/**
+ * This function registers a taxonomy for the categories.
+ */
+function mp_ssv_buildings_category_taxonomy()
+{
+    register_taxonomy(
+        'building_category',
+        'buildings',
+        array(
+            'hierarchical' => true,
+            'label'        => 'Building Categories',
+            'query_var'    => true,
+            'rewrite'      => array(
+                'slug'       => 'building_category',
+                'with_front' => false,
+            ),
+        )
+    );
+}
+
+add_action('init', 'mp_ssv_buildings_category_taxonomy');
+#endregion
+
 #region Meta Boxes
 /**
  * This method adds the custom Meta Boxes
  */
 function mp_dd_building_meta_boxes()
 {
-    add_meta_box('mp_dd_include_tag', 'Tags', 'mp_dd_include_tag', 'buildings', 'after_title', 'high');
+    add_meta_box('mp_dd_building_include_tag', 'Tags', 'mp_dd_building_include_tag', 'buildings', 'after_title', 'high');
 }
 
 add_action('add_meta_boxes', 'mp_dd_building_meta_boxes');
 
-function mp_dd_include_tag()
+function mp_dd_building_include_tag()
 {
     global $post;
     ?>
@@ -107,74 +129,6 @@ function mp_dd_include_tag()
     <p><code>[building-content-<?= $post->ID ?>]</code> place this somewhere you want to display the building content.</p>
     <?php
 }
-
-#endregion
-
-#region Save Building
-function mp_dd_filter_building_data($data)
-{
-    global $post;
-    if ($post == null || $post->post_type != 'buildings' || empty($data['post_content'])) {
-        return $data;
-    }
-    global $wpdb;
-    $file = new DOMDocument();
-    libxml_use_internal_errors(true);
-    $file->registerNodeClass('DOMElement', 'JSLikeHTMLElement');
-    $file->loadHTML((stripslashes($data['post_content'])));
-    $html = str_replace(MP_DD::REMOVE_HTML, '', $file->saveHTML());
-
-    preg_match_all("/<p size=\"2\">-(.*)<\/p>/", $html, $titles);
-    $buildingsContainer = $file->getElementById('buildings');
-    if ($buildingsContainer != null) {
-        $buildings = array();
-        for ($i = 0; $i < $buildingsContainer->childNodes->length; $i++) {
-            $child = $buildingsContainer->childNodes->item($i);
-            if ($child instanceof DOMElement) {
-                $modalID      = $child->getAttribute('id');
-                $titleElement = $child->childNodes->item(0)->childNodes->item(0);
-                /** @noinspection PhpUndefinedFieldInspection */
-                $title = $titleElement->innerHTML;
-                $child->childNodes->item(0)->removeChild($titleElement);
-                /** @noinspection PhpUndefinedFieldInspection */
-                $buildingContent = utf8_decode($child->childNodes->item(0)->innerHTML);
-                $found           = $wpdb->get_row("SELECT ID FROM $wpdb->posts WHERE post_content = '$buildingContent'");
-                if (isset($found->ID)) {
-                    $postID = $found->ID;
-                } else {
-                    $postID = wp_insert_post(
-                        array(
-                            'post_title'   => $title,
-                            'post_content' => $buildingContent,
-                            'post_type'    => 'buildings',
-                            'post_status'  => 'publish',
-                        )
-                    );
-                }
-                $buildings[] = array(
-                    'modal_id'     => $modalID,
-                    'post_id'      => $postID,
-                    'post_title'   => $title,
-                    'post_content' => $buildingContent,
-                );
-            }
-        }
-        $file->loadHTML(utf8_encode(stripslashes($data['post_content'])));
-        $buildingsContainer = $file->getElementById('buildings');
-        $buildingsContainer->parentNode->removeChild($buildingsContainer);
-        $html = $file->saveHTML();
-
-        foreach ($buildings as $building) {
-            $modalID = $building['modal_id'];
-            $postID  = $building['post_id'];
-            $html    = str_replace("href=\"#$modalID\"", "href=\"[building-url-$postID]\"", $html);
-        }
-        $data['post_content'] = addslashes(str_replace(MP_DD::REMOVE_HTML, '', $html));
-    }
-    return $data;
-}
-
-//add_filter('wp_insert_post_data', 'mp_dd_filter_building_data');
 
 #endregion
 

@@ -1,7 +1,5 @@
 <?php
 
-use mp_dd\MP_DD;
-
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -68,7 +66,7 @@ function mp_dd_cities_post()
         'show_ui'             => true,
         'show_in_menu'        => true,
         'menu_position'       => 5,
-        'menu_icon'           => 'dashicons-location-alt',
+        'menu_icon'           => 'dashicons-admin-multisite',
         'show_in_nav_menus'   => true,
         'publicly_queryable'  => true,
         'exclude_from_search' => false,
@@ -83,85 +81,4 @@ function mp_dd_cities_post()
 }
 
 add_action('init', 'mp_dd_cities_post');
-#endregion
-
-#region Save City
-function mp_dd_filter_city_data($data)
-{
-    global $post;
-    if ($post == null || $post->post_type != 'cities' || empty($data['post_content'])) {
-        return $data;
-    }
-    global $wpdb;
-    $file = new DOMDocument();
-    libxml_use_internal_errors(true);
-    $file->registerNodeClass('DOMElement', 'JSLikeHTMLElement');
-    $file->loadHTML((stripslashes($data['post_content'])));
-
-    $buildingsContainer = $file->getElementById('buildings');
-    if ($buildingsContainer != null) {
-        $buildings = array();
-        for ($i = 0; $i < $buildingsContainer->childNodes->length; $i++) {
-            $child = $buildingsContainer->childNodes->item($i);
-            if ($child instanceof DOMElement) {
-                $modalID      = $child->getAttribute('id');
-                $titleElement = $child->childNodes->item(0)->childNodes->item(0);
-                /** @noinspection PhpUndefinedFieldInspection */
-                $title = $titleElement->innerHTML;
-                $child->childNodes->item(0)->removeChild($titleElement);
-                /** @noinspection PhpUndefinedFieldInspection */
-                $buildingContent = utf8_decode($child->childNodes->item(0)->innerHTML);
-                $found           = $wpdb->get_row("SELECT ID FROM $wpdb->posts WHERE post_content = '$buildingContent'");
-                if (isset($found->ID)) {
-                    $postID = $found->ID;
-                } else {
-                    $postID = wp_insert_post(
-                        array(
-                            'post_title'   => $title,
-                            'post_content' => $buildingContent,
-                            'post_type'    => 'buildings',
-                            'post_status'  => 'publish',
-                        )
-                    );
-                }
-                $buildings[] = array(
-                    'modal_id'     => $modalID,
-                    'post_id'      => $postID,
-                    'post_title'   => $title,
-                    'post_content' => $buildingContent,
-                );
-            }
-        }
-        $file->loadHTML(utf8_encode(stripslashes($data['post_content'])));
-        $buildingsContainer = $file->getElementById('buildings');
-        $buildingsContainer->parentNode->removeChild($buildingsContainer);
-        $html = $file->saveHTML();
-
-        foreach ($buildings as $building) {
-            $modalID = $building['modal_id'];
-            $postID  = $building['post_id'];
-            $html    = str_replace("href=\"#$modalID\"", "href=\"[building-url-$postID]\"", $html);
-        }
-        $data['post_content'] = addslashes(str_replace(MP_DD::REMOVE_HTML, '', $html));
-    }
-    return $data;
-}
-
-add_filter('wp_insert_post_data', 'mp_dd_filter_city_data');
-
-#endregion
-
-#region Post Content
-function mp_dd_filter_city_content($content)
-{
-    if (strpos($content, MP_DD::TAG_BUILDINGS) !== false) {
-        global $post;
-        $buildings = get_post_meta($post->ID, 'buildings', true);
-        $content   = str_replace(MP_DD::TAG_BUILDINGS, implode('', $buildings), $content);
-    }
-
-    return $content;
-}
-
-add_filter('the_content', 'mp_dd_filter_city_content');
 #endregion
