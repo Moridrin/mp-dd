@@ -71,7 +71,7 @@ if (!function_exists('mp_var_export')) {
      */
     function mp_var_export($variable, $die = false, $highlight = true)
     {
-        if ($variable instanceof DOMElement) {
+        if ($variable instanceof DOMElement || $variable instanceof DOMText) {
             $variable = $variable->ownerDocument->saveHTML($variable);
         }
         if (mp_has_circular_reference($variable)) {
