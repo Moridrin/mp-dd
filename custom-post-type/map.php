@@ -77,7 +77,7 @@ function mp_dd_maps_post()
         'capability_type'     => 'post',
     );
 
-    register_post_type('maps', $args);
+    register_post_type('map', $args);
 }
 
 add_action('init', 'mp_dd_maps_post');

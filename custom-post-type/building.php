@@ -77,7 +77,7 @@ function mp_dd_buildings_post()
         'capability_type'     => 'post',
     );
 
-    register_post_type('buildings', $args);
+    register_post_type('building', $args);
 }
 
 add_action('init', 'mp_dd_buildings_post');
@@ -91,7 +91,7 @@ function mp_ssv_buildings_category_taxonomy()
 {
     register_taxonomy(
         'building_category',
-        'buildings',
+        'building',
         array(
             'hierarchical' => true,
             'label'        => 'Building Categories',

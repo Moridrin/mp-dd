@@ -79,7 +79,7 @@ function mp_dd_npcs_post()
         'capability_type'     => 'post',
     );
 
-    register_post_type('npcs', $args);
+    register_post_type('npc', $args);
 }
 
 add_action('init', 'mp_dd_npcs_post');
@@ -91,8 +91,8 @@ add_action('init', 'mp_dd_npcs_post');
  */
 function mp_dd_npc_meta_boxes()
 {
-    add_meta_box('mp_dd_npc_info', 'Info', 'mp_dd_npc_info', 'npcs', 'after_title', 'high');
-    add_meta_box('mp_dd_npc_include_tag', 'Tags', 'mp_dd_npc_include_tag', 'npcs', 'after_title', 'normal');
+    add_meta_box('mp_dd_npc_info', 'Info', 'mp_dd_npc_info', 'npc', 'after_title', 'high');
+    add_meta_box('mp_dd_npc_include_tag', 'Tags', 'mp_dd_npc_include_tag', 'npc', 'after_title', 'normal');
 }
 
 add_action('add_meta_boxes', 'mp_dd_npc_meta_boxes');
@@ -111,6 +111,8 @@ function mp_dd_npc_info()
 {
     global $post;
     global $wpdb;
+    $buildings   = get_posts(array('post_type' => 'building'));
+    $buildings   = array_combine(array_column($buildings, 'ID'), array_column($buildings, 'post_title'));
     $height      = get_post_meta($post->ID, 'height', true);
     $weight      = get_post_meta($post->ID, 'weight', true);
     $npcs        = $wpdb->get_results("SELECT ID, post_title FROM $wpdb->posts WHERE post_type = 'npcs' AND post_status = 'publish'");
@@ -119,6 +121,8 @@ function mp_dd_npc_info()
     $clothing    = get_post_meta($post->ID, 'clothing', true);
     $possessions = get_post_meta($post->ID, 'possessions', true);
     $profession  = get_post_meta($post->ID, 'profession', true);
+    $buildingID  = get_post_meta($post->ID, 'wp_building_id', true);
+    $type        = get_post_meta($post->ID, 'type', true);
     ?>
     <datalist id="npcs">
         <?php foreach ($npcs as $id => $title): ?>
@@ -128,6 +132,20 @@ function mp_dd_npc_info()
         <?php endforeach; ?>
     </datalist>
     <table>
+        <tr>
+            <td><label for="building_id">Building</label></td>
+            <td colspan="4">
+                <select name="building_id" id="building_id">
+                    <?php foreach ($buildings as $id => $building): ?>
+                        <option value="<?= $id ?>" <?= $id == $buildingID ? 'selected' : '' ?>><?= $building ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="type">Type</label></td>
+            <td><input type="text" name="type" id="type" value="<?= $type ?>"></td>
+        </tr>
         <tr>
             <td><label for="profession">Profession</label></td>
             <td><input type="text" name="profession" id="profession" value="<?= $profession ?>"></td>
@@ -215,7 +233,7 @@ function mp_dd_npc_save_meta($post_id)
             }
             update_post_meta($post_id, 'family_links', $links);
         }
-        foreach (array('height','weight','clothing','possessions','profession') as $key) {
+        foreach (array('height', 'weight', 'clothing', 'possessions', 'profession') as $key) {
             if (isset($_POST[$key])) {
                 update_post_meta($post_id, $key, $_POST[$key]);
             }
@@ -232,34 +250,34 @@ function mp_dd_filter_npc_content($content)
 {
     if (preg_match_all("/\[npc-([0-9]+)\]/", $content, $npcURLMatches)) {
         foreach ($npcURLMatches[1] as $npcID) {
-            $npc = get_post($npcID);
-            $html = '<h3>' . $npc->post_title . '</h3>';
-            $html .= '<p>';
-            $html .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
-            $html .= $npc->post_content . '<br/>';
-            $html .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
-            $html .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
-            $html .= '</p>';
-            $content  = str_replace("[npc-$npcID]", $html, $content);
+            $npc     = get_post($npcID);
+            $html    = '<h3>' . $npc->post_title . '</h3>';
+            $html    .= '<p>';
+            $html    .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
+            $html    .= $npc->post_content . '<br/>';
+            $html    .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
+            $html    .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
+            $html    .= '</p>';
+            $content = str_replace("[npc-$npcID]", $html, $content);
         }
     }
     if (preg_match_all("/\[npc-([0-9]+)-li\]/", $content, $npcURLMatches)) {
         foreach ($npcURLMatches[1] as $npcID) {
-            $npc = get_post($npcID);
-            $html = '<li>';
-            $html .= '<div class="collapsible-header">';
-            $html .= $npc->post_title;
-            $html .= '</div>';
-            $html .= '<div class="collapsible-body">';
-            $html .= '<p>';
-            $html .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
-            $html .= $npc->post_content . '<br/>';
-            $html .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
-            $html .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
-            $html .= '</p>';
-            $html .= '</div>';
-            $html .= '</li>';
-            $content  = str_replace("[npc-$npcID-li]", $html, $content);
+            $npc     = get_post($npcID);
+            $html    = '<li>';
+            $html    .= '<div class="collapsible-header">';
+            $html    .= $npc->post_title;
+            $html    .= '</div>';
+            $html    .= '<div class="collapsible-body">';
+            $html    .= '<p>';
+            $html    .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
+            $html    .= $npc->post_content . '<br/>';
+            $html    .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
+            $html    .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
+            $html    .= '</p>';
+            $html    .= '</div>';
+            $html    .= '</li>';
+            $content = str_replace("[npc-$npcID-li]", $html, $content);
         }
     }
 

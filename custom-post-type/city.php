@@ -77,7 +77,7 @@ function mp_dd_cities_post()
         'capability_type'     => 'post',
     );
 
-    register_post_type('cities', $args);
+    register_post_type('city', $args);
 }
 
 add_action('init', 'mp_dd_cities_post');
