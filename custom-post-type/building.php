@@ -87,7 +87,7 @@ add_action('init', 'mp_dd_buildings_post');
 /**
  * This function registers a taxonomy for the categories.
  */
-function mp_ssv_buildings_category_taxonomy()
+function mp_dd_building_category_taxonomy()
 {
     register_taxonomy(
         'building_category',
@@ -104,7 +104,7 @@ function mp_ssv_buildings_category_taxonomy()
     );
 }
 
-add_action('init', 'mp_ssv_buildings_category_taxonomy');
+add_action('init', 'mp_dd_building_category_taxonomy');
 #endregion
 
 #region Meta Boxes

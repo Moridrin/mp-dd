@@ -85,6 +85,30 @@ function mp_dd_npcs_post()
 add_action('init', 'mp_dd_npcs_post');
 #endregion
 
+#region Category Taxonomy
+/**
+ * This function registers a taxonomy for the categories.
+ */
+function mp_dd_npc_category_taxonomy()
+{
+    register_taxonomy(
+        'npc_type',
+        'npc',
+        array(
+            'hierarchical' => true,
+            'label'        => 'NPC Type',
+            'query_var'    => true,
+            'rewrite'      => array(
+                'slug'       => 'npc_type',
+                'with_front' => false,
+            ),
+        )
+    );
+}
+
+add_action('init', 'mp_dd_npc_category_taxonomy');
+#endregion
+
 #region Meta Boxes
 /**
  * This method adds the custom Meta Boxes
