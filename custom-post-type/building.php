@@ -113,7 +113,8 @@ add_action('init', 'mp_dd_building_category_taxonomy');
  */
 function mp_dd_building_meta_boxes()
 {
-    add_meta_box('mp_dd_building_include_tag', 'Tags', 'mp_dd_building_include_tag', 'buildings', 'after_title', 'high');
+    add_meta_box('mp_dd_building_include_tag', 'Tags', 'mp_dd_building_include_tag', 'building', 'after_title', 'high');
+    add_meta_box('mp_dd_building_info', 'Info', 'mp_dd_building_info', 'building', 'after_title', 'high');
 }
 
 add_action('add_meta_boxes', 'mp_dd_building_meta_boxes');
@@ -130,11 +131,58 @@ function mp_dd_building_include_tag()
     <?php
 }
 
+function mp_dd_building_info()
+{
+    global $post;
+    global $wpdb;
+    $npcs   = $wpdb->get_results("SELECT ID, post_title FROM $wpdb->posts WHERE post_type = 'npc' AND post_status = 'publish'");
+    $npcs   = array_combine(array_column($npcs, 'ID'), array_column($npcs, 'post_title'));
+    $cities = $wpdb->get_results("SELECT ID, post_title FROM $wpdb->posts WHERE post_type = 'city' AND post_status = 'publish'");
+    $cities = array_combine(array_column($cities, 'ID'), array_column($cities, 'post_title'));
+    $owner  = get_post_meta($post->ID, 'owner', true);
+    $info   = get_post_meta($post->ID, 'info', true);
+    $inCity = get_post_meta($post->ID, 'city', true);
+    ?>
+    <table>
+        <tr>
+            <td><label for="city">City</label></td>
+            <td>
+                <select id="city" name="city">
+                    <?php foreach ($cities as $id => $city): ?>
+                        <option value="<?= $id ?>" <?= $id == $inCity ? 'selected' : '' ?>><?= $city ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="info">Info</label></td>
+            <td><input type="text" name="info" id="info" value="<?= $info ?>"></td>
+        </tr>
+        <tr>
+            <td><label for="owner">Owner</label></td>
+            <td>
+                <select id="owner" name="owner">
+                    <?php foreach ($npcs as $id => $title): ?>
+                        <option value="<?= $id ?>" <?= $id == $owner ? 'selected' : '' ?>><?= $title ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+        </tr>
+    </table>
+    <?php
+}
+
 #endregion
 
 #region Post Content
 function mp_dd_filter_building_content($content)
 {
+    global $post;
+    $ownerID = get_post_meta($post->ID, 'owner', true);
+    if ($ownerID) {
+        $content = preg_replace(array('/\[npc-li-owner\]/', '/\[npc-owner\]/'), "[npc-$ownerID]", $content);
+    }
+
     if (preg_match_all("/\[building-url-([0-9]+)\]/", $content, $buildingURLMatches)) {
         foreach ($buildingURLMatches[1] as $buildingID) {
             $building = get_post($buildingID);
@@ -143,8 +191,13 @@ function mp_dd_filter_building_content($content)
                 $content .= "<div id=\"modal_$buildingID\" class=\"modal modal-fixed-footer\">";
                 $content .= "<div class=\"modal-content\">";
                 $content .= '<h2>' . $building->post_title . '</h2>';
+//                $content .= preg_replace('/\[npc-([0-9]+)\]/', "[npc-li-$1]", $building->post_content);
                 $content .= $building->post_content;
-                $content .= "</div></div>";
+                $content .= '</div></div>';
+            }
+            $ownerID = get_post_meta($building->ID, 'owner', true);
+            if ($ownerID) {
+                $content = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
             }
         }
     }
@@ -159,6 +212,10 @@ function mp_dd_filter_building_content($content)
                 $content .= "<h2>$buildingTitle</h2>";
                 $content .= $building->post_content;
                 $content .= "</div></div>";
+            }
+            $ownerID = get_post_meta($building->ID, 'owner', true);
+            if ($ownerID) {
+                $content = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
             }
         }
     }

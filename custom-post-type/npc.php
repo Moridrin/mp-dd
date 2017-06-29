@@ -135,18 +135,16 @@ function mp_dd_npc_info()
 {
     global $post;
     global $wpdb;
-    $buildings   = get_posts(array('post_type' => 'building'));
-    $buildings   = array_combine(array_column($buildings, 'ID'), array_column($buildings, 'post_title'));
-    $height      = get_post_meta($post->ID, 'height', true);
-    $weight      = get_post_meta($post->ID, 'weight', true);
-    $npcs        = $wpdb->get_results("SELECT ID, post_title FROM $wpdb->posts WHERE post_type = 'npcs' AND post_status = 'publish'");
-    $npcs        = array_combine(array_column($npcs, 'ID'), array_column($npcs, 'post_title'));
-    $links       = get_post_meta($post->ID, 'family_links', true);
-    $clothing    = get_post_meta($post->ID, 'clothing', true);
-    $possessions = get_post_meta($post->ID, 'possessions', true);
-    $profession  = get_post_meta($post->ID, 'profession', true);
-    $buildingID  = get_post_meta($post->ID, 'wp_building_id', true);
-    $type        = get_post_meta($post->ID, 'type', true);
+    $height       = get_post_meta($post->ID, 'height', true);
+    $weight       = get_post_meta($post->ID, 'weight', true);
+    $npcs         = $wpdb->get_results("SELECT ID, post_title FROM $wpdb->posts WHERE post_type = 'npc' AND post_status = 'publish'");
+    $npcs         = array_combine(array_column($npcs, 'ID'), array_column($npcs, 'post_title'));
+    $clothing     = get_post_meta($post->ID, 'clothing', true);
+    $possessions  = get_post_meta($post->ID, 'possessions', true);
+    $armsAndArmor = get_post_meta($post->ID, 'arms_armor', true);
+    $class        = get_post_meta($post->ID, 'class', true);
+    $level        = get_post_meta($post->ID, 'level', true);
+    $profession   = get_post_meta($post->ID, 'profession', true);
     ?>
     <datalist id="npcs">
         <?php foreach ($npcs as $id => $title): ?>
@@ -157,44 +155,22 @@ function mp_dd_npc_info()
     </datalist>
     <table>
         <tr>
-            <td><label for="building_id">Building</label></td>
-            <td colspan="4">
-                <select name="building_id" id="building_id">
-                    <?php foreach ($buildings as $id => $building): ?>
-                        <option value="<?= $id ?>" <?= $id == $buildingID ? 'selected' : '' ?>><?= $building ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td><label for="type">Type</label></td>
-            <td><input type="text" name="type" id="type" value="<?= $type ?>"></td>
-        </tr>
-        <tr>
             <td><label for="profession">Profession</label></td>
             <td><input type="text" name="profession" id="profession" value="<?= $profession ?>"></td>
         </tr>
+        <?php if ($class && $level): ?>
+            <tr>
+                <td><label for="class">Class</label></td>
+                <td><input type="text" name="class" id="class" value="<?= $class ?>"></td>
+                <td><label for="level">Level</label></td>
+                <td><input type="text" name="level" id="level" value="<?= $level ?>"></td>
+            </tr>
+        <?php endif; ?>
         <tr>
             <td><label for="height">Height</label></td>
             <td><input type="text" name="height" id="height" value="<?= $height ?>"></td>
-        </tr>
-        <tr>
             <td><label for="weight">Weight</label></td>
             <td><input type="text" name="weight" id="weight" value="<?= $weight ?>"></td>
-        </tr>
-        <tr id="add_link_tr">
-            <td><label for="npc_link_id">Name</label></td>
-            <td><input type="text" name="npc_link_id" id="npc_link_id" list="npcs"></td>
-            <td><label for="npc_link_type">Type</label></td>
-            <td>
-                <select id="npc_link_type" name="npc_link_type">
-                    <option value="0">Spouse</option>
-                    <option value="1">Child</option>
-                </select>
-            </td>
-            <td>
-                <button type="button" onclick="mp_dd_add_new_family_link()">Link Family</button>
-            </td>
         </tr>
         <tr>
             <td><label for="clothing">Clothing</label></td>
@@ -204,31 +180,11 @@ function mp_dd_npc_info()
             <td><label for="possessions">Possessions</label></td>
             <td colspan="4"><textarea name="possessions" id="possessions" style="width: 100%;"><?= $possessions ?></textarea></td>
         </tr>
+        <tr>
+            <td><label for="arms_armor">Arms and Armor</label></td>
+            <td colspan="4"><textarea name="arms_armor" id="arms_armor" style="width: 100%;"><?= $armsAndArmor ?></textarea></td>
+        </tr>
     </table>
-    <script>
-        var i = 0;
-        function mp_dd_add_new_family_link() {
-            var npcID = document.getElementById('npc_link_id').value;
-            var npcName = document.querySelector('datalist#npcs option[value="' + npcID + '"]').text;
-            var linkTypeObject = document.getElementById('npc_link_type');
-            var linkType = linkTypeObject.options[linkTypeObject.selectedIndex].value;
-            if (!npcID) {
-                document.getElementById("npc_link_id").setAttribute("placeholder", "fill in a valid Field ID");
-            } else {
-                document.getElementById("npc_link_id").setAttribute("placeholder", "");
-                mp_dd_add_family_link('add_link_tr', i, npcID, npcName, linkType);
-                i++;
-            }
-            document.getElementById('npc_link_id').value = '';
-        }
-
-        <?php if (is_array($links)): ?>
-        <?php foreach ($links as $link): ?>
-        mp_dd_add_family_link('add_link_tr', i, <?= $link['npc_id'] ?>, "<?= $npcs[$link['npc_id']] ?>", "<?= $link['link_type'] ?>");
-        i++;
-        <?php endforeach; ?>
-        <?php endif; ?>
-    </script>
     <?php
 }
 
@@ -247,17 +203,7 @@ function mp_dd_npc_save_meta($post_id)
     }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        if (isset($_POST['link_ids'])) {
-            $links = array();
-            foreach ($_POST['link_ids'] as $linkID) {
-                $links[] = array(
-                    'link_type' => $_POST['link_' . $linkID . '_link_type'],
-                    'npc_id'    => $_POST['link_' . $linkID . '_npc_id'],
-                );
-            }
-            update_post_meta($post_id, 'family_links', $links);
-        }
-        foreach (array('height', 'weight', 'clothing', 'possessions', 'profession') as $key) {
+        foreach (array('profession', 'class', 'level', 'height', 'weight', 'clothing', 'possessions', 'arms_armor') as $key) {
             if (isset($_POST[$key])) {
                 update_post_meta($post_id, $key, $_POST[$key]);
             }
@@ -266,42 +212,71 @@ function mp_dd_npc_save_meta($post_id)
     return $post_id;
 }
 
-add_action('save_post_npcs', 'mp_dd_npc_save_meta');
+add_action('save_post_npc', 'mp_dd_npc_save_meta');
 #endregion
 
 #region Post Content
 function mp_dd_filter_npc_content($content)
 {
-    if (preg_match_all("/\[npc-([0-9]+)\]/", $content, $npcURLMatches)) {
-        foreach ($npcURLMatches[1] as $npcID) {
-            $npc     = get_post($npcID);
-            $html    = '<h3>' . $npc->post_title . '</h3>';
-            $html    .= '<p>';
-            $html    .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
-            $html    .= $npc->post_content . '<br/>';
-            $html    .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
-            $html    .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
-            $html    .= '</p>';
-            $content = str_replace("[npc-$npcID]", $html, $content);
+    $npcContent = array();
+    if (preg_match_all("/(\[npc(-li)?-([0-9]+)\]){1,}/", $content, $npcMatches)) {
+        preg_match_all("/\[npc(-li)?-([0-9]+)\]/", implode('', $npcMatches[0]), $npcMatches);
+        foreach ($npcMatches[2] as $id => $npcID) {
+            $npc  = get_post($npcID);
+            $html = '';
+            if (has_post_thumbnail($npcID)) {
+                $html .= '<div class="row">';
+                $html .= '<div class="col s10" style="padding-left: 0;">';
+            }
+            $html  .= '<p>';
+            $class = get_post_meta($npcID, 'class', true);
+            $level = get_post_meta($npcID, 'level', true);
+            if ($class && $level) {
+                $html .= '<b>Class:</b> ' . $class . ' <b>Level:</b> ' . $level . '<br/>';
+            }
+            $html .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
+            $html .= $npc->post_content . '<br/>';
+            $html .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
+            $html .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
+            $html .= '</p>';
+            if (has_post_thumbnail($npcID)) {
+                $html .= '</div>';
+                $html .= '<div class="col s2 valign-wrapper center-align">';
+                $html .= get_the_post_thumbnail($npcID, 'thumbnail');
+                $html .= '</div></div>';
+            }
+            $npcContent[$npcID] = $html;
         }
     }
-    if (preg_match_all("/\[npc-([0-9]+)-li\]/", $content, $npcURLMatches)) {
-        foreach ($npcURLMatches[1] as $npcID) {
-            $npc     = get_post($npcID);
-            $html    = '<li>';
-            $html    .= '<div class="collapsible-header">';
-            $html    .= $npc->post_title;
-            $html    .= '</div>';
-            $html    .= '<div class="collapsible-body">';
-            $html    .= '<p>';
-            $html    .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
-            $html    .= $npc->post_content . '<br/>';
-            $html    .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
-            $html    .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
-            $html    .= '</p>';
-            $html    .= '</div>';
-            $html    .= '</li>';
-            $content = str_replace("[npc-$npcID-li]", $html, $content);
+    if (preg_match_all("/(\[npc-li-([0-9]+)\]){1,}/", $content, $npcGroupMatches)) {
+        foreach ($npcGroupMatches[0] as $npcGroupMatch) {
+            $html = '<ul class="collapsible" data-collapsible="expandable">';
+            preg_match_all("/\[npc-li?-([0-9]+)\]/", $npcGroupMatch, $npcMatches);
+            foreach ($npcMatches[1] as $npcID) {
+                $npc        = get_post($npcID);
+                $profession = get_post_meta($npcID, 'profession', true);
+                $profession = $profession ? '<span style="margin-left: 5px;"> (' . $profession . ')</span>' : '';
+                $html       .= '<li>';
+                $html       .= '<div class="collapsible-header">';
+                $html       .= '<h3 style="display: inline-block;">' . $npc->post_title . '</h3>' . $profession;
+                $html       .= '</div>';
+                $html       .= '<div class="collapsible-body">';
+                $html       .= $npcContent[$npcID];
+                $html       .= '</div>';
+                $html       .= '</li>';
+            }
+            $html    .= '</ul>';
+            $content = str_replace($npcGroupMatch, $html, $content);
+        }
+    }
+    if (preg_match_all("/\[npc-([0-9]+)\]/", $content, $npcMatches)) {
+        foreach ($npcMatches[1] as $npcID) {
+            $npc        = get_post($npcID);
+            $profession = get_post_meta($npcID, 'profession', true);
+            $profession = $profession ? '<span style="margin-left: 5px;"> (' . $profession . ')</span>' : '';
+            $html       = '<h2 style="display: inline-block;">' . $npc->post_title . '</h2>' . $profession;
+            $html       .= $npcContent[$npcID];
+            $content    = str_replace("[npc-$npcID]", $html, $content);
         }
     }
 
