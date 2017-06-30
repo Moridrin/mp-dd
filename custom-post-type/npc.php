@@ -145,6 +145,8 @@ function mp_dd_npc_info()
     $class        = get_post_meta($post->ID, 'class', true);
     $level        = get_post_meta($post->ID, 'level', true);
     $profession   = get_post_meta($post->ID, 'profession', true);
+    $spouse       = get_post_meta($post->ID, 'spouse', true);
+    $children     = get_post_meta($post->ID, 'children', true);
     ?>
     <datalist id="npcs">
         <?php foreach ($npcs as $id => $title): ?>
@@ -154,6 +156,30 @@ function mp_dd_npc_info()
         <?php endforeach; ?>
     </datalist>
     <table>
+        <tr>
+            <td><label for="spouse">Spouse</label></td>
+            <td>
+                <select id="spouse" name="spouse">
+                    <?php foreach ($npcs as $id => $title): ?>
+                        <?php if ($id != $post->ID): ?>
+                            <option value="<?= $id ?>" <?= $id == $spouse ? 'selected' : '' ?>><?= $title ?></option>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="children">Children</label></td>
+            <td>
+                <select id="children" name="children">
+                    <?php foreach ($npcs as $id => $title): ?>
+                        <?php if ($id != $post->ID): ?>
+                            <option value="<?= $id ?>" <?= in_array($id, $children) ? 'selected' : '' ?>><?= $title ?></option>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+        </tr>
         <tr>
             <td><label for="profession">Profession</label></td>
             <td><input type="text" name="profession" id="profession" value="<?= $profession ?>"></td>
@@ -219,8 +245,8 @@ add_action('save_post_npc', 'mp_dd_npc_save_meta');
 function mp_dd_filter_npc_content($content)
 {
     $npcContent = array();
-    if (preg_match_all("/(\[npc(-li)?-([0-9]+)\]){1,}/", $content, $npcMatches)) {
-        preg_match_all("/\[npc(-li)?-([0-9]+)\]/", implode('', $npcMatches[0]), $npcMatches);
+    if (preg_match_all("/(\[npc(-li)?-([0-9]+)(-spouse)?(-child)?\]){1,}/", $content, $npcMatches)) {
+        preg_match_all("/\[npc(-li)?-([0-9]+)(-spouse)?(-child)?\]/", implode('', $npcMatches[0]), $npcMatches);
         foreach ($npcMatches[2] as $id => $npcID) {
             $npc  = get_post($npcID);
             $html = '';
@@ -248,14 +274,17 @@ function mp_dd_filter_npc_content($content)
             $npcContent[$npcID] = $html;
         }
     }
-    if (preg_match_all("/(\[npc-li-([0-9]+)\]){1,}/", $content, $npcGroupMatches)) {
+    if (preg_match_all("/(\[npc-li-([0-9]+)(-spouse)?(-child)?\]){1,}/", $content, $npcGroupMatches)) {
         foreach ($npcGroupMatches[0] as $npcGroupMatch) {
             $html = '<ul class="collapsible" data-collapsible="expandable">';
-            preg_match_all("/\[npc-li?-([0-9]+)\]/", $npcGroupMatch, $npcMatches);
-            foreach ($npcMatches[1] as $npcID) {
+            preg_match_all("/\[npc-li?-([0-9]+)(-spouse)?(-child)?\]/", $npcGroupMatch, $npcMatches);
+            for ($i = 0; $i < count($npcMatches[1]); $i++) {
+                $npcID      = $npcMatches[1][$i];
                 $npc        = get_post($npcID);
                 $profession = get_post_meta($npcID, 'profession', true);
                 $profession = $profession ? '<span style="margin-left: 5px;"> (' . $profession . ')</span>' : '';
+                $profession = $npcMatches[2][$i] == '-spouse' ? '<span style="margin-left: 5px;"> (spouse)</span>' : $profession;
+                $profession = $npcMatches[3][$i] == '-child' ? '<span style="margin-left: 5px;"> (child)</span>' : $profession;
                 $html       .= '<li>';
                 $html       .= '<div class="collapsible-header">';
                 $html       .= '<h3 style="display: inline-block;">' . $npc->post_title . '</h3>' . $profession;
@@ -269,14 +298,18 @@ function mp_dd_filter_npc_content($content)
             $content = str_replace($npcGroupMatch, $html, $content);
         }
     }
-    if (preg_match_all("/\[npc-([0-9]+)\]/", $content, $npcMatches)) {
-        foreach ($npcMatches[1] as $npcID) {
+    if (preg_match_all("/\[npc-([0-9]+)(-spouse)?(-child)?\]/", $content, $npcMatches)) {
+        for ($i = 0; $i < count($npcMatches[1]); $i++) {
+            $npcID      = $npcMatches[1][$i];
             $npc        = get_post($npcID);
             $profession = get_post_meta($npcID, 'profession', true);
             $profession = $profession ? '<span style="margin-left: 5px;"> (' . $profession . ')</span>' : '';
+            $profession = $npcMatches[2][$i] == '-spouse' ? '<span style="margin-left: 5px;"> (spouse)</span>' : $profession;
+            $profession = $npcMatches[3][$i] == '-child' ? '<span style="margin-left: 5px;"> (child)</span>' : $profession;
             $html       = '<h2 style="display: inline-block;">' . $npc->post_title . '</h2>' . $profession;
             $html       .= $npcContent[$npcID];
-            $content    = str_replace("[npc-$npcID]", $html, $content);
+            $search = '[npc-' . $npcID . $npcMatches[2][$i] . $npcMatches[3][$i] . ']';
+            $content    = str_replace($search, $html, $content);
         }
     }
 

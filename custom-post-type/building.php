@@ -180,7 +180,17 @@ function mp_dd_filter_building_content($content)
     global $post;
     $ownerID = get_post_meta($post->ID, 'owner', true);
     if ($ownerID) {
-        $content = preg_replace(array('/\[npc-li-owner\]/', '/\[npc-owner\]/'), "[npc-$ownerID]", $content);
+        $content         = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
+        $ownerWithFamily = "[npc$1-$ownerID]";
+        $spouse          = get_post_meta($ownerID, 'spouse', true);
+        if ($spouse) {
+            $ownerWithFamily .= "[npc$1-$spouse]";
+        }
+        $children = get_post_meta($ownerID, 'children', true);
+        foreach ($children as $child) {
+            $ownerWithFamily .= "[npc$1-$child]";
+        }
+        $content = preg_replace('/\[npc(-li)?-owner-with-family\]/', $ownerWithFamily, $content);
     }
 
     if (preg_match_all("/\[building-url-([0-9]+)\]/", $content, $buildingURLMatches)) {
@@ -197,7 +207,17 @@ function mp_dd_filter_building_content($content)
             }
             $ownerID = get_post_meta($building->ID, 'owner', true);
             if ($ownerID) {
-                $content = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
+                $content         = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
+                $ownerWithFamily = "[npc$1-$ownerID]";
+                $spouse          = get_post_meta($ownerID, 'spouse', true);
+                if ($spouse) {
+                    $ownerWithFamily .= "[npc$1-$spouse-spouse]";
+                }
+                $children = get_post_meta($ownerID, 'children', true);
+                foreach ($children as $child) {
+                    $ownerWithFamily .= "[npc$1-$child-child]";
+                }
+                $content = preg_replace('/\[npc(-li)?-owner-with-family\]/', $ownerWithFamily, $content);
             }
         }
     }
@@ -215,7 +235,17 @@ function mp_dd_filter_building_content($content)
             }
             $ownerID = get_post_meta($building->ID, 'owner', true);
             if ($ownerID) {
-                $content = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
+                $content         = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
+                $ownerWithFamily = "[npc$1-$ownerID]";
+                $spouse          = get_post_meta($ownerID, 'spouse', true);
+                if ($spouse) {
+                    $ownerWithFamily .= "[npc$1-$spouse]";
+                }
+                $children = get_post_meta($ownerID, 'children', true);
+                foreach ($children as $child) {
+                    $ownerWithFamily .= "[npc$1-$child]";
+                }
+                $content = preg_replace('/\[npc(-li)?-owner-with-family\]/', $ownerWithFamily, $content);
             }
         }
     }
