@@ -89,45 +89,132 @@ add_action('init', 'mp_dd_maps_post');
  */
 function mp_dd_map_meta_boxes()
 {
-    add_meta_box('mp_dd_map_include_tag', 'Tags', 'mp_dd_map_include_tag', 'map', 'after_title', 'high');
-    add_meta_box('mp_dd_map_building_labels', 'Tags', 'mp_dd_map_building_labels', 'map', 'normal', 'high');
+    add_meta_box('mp_dd_map_include_info', 'Info', 'mp_dd_map_include_info', 'map', 'after_title', 'high');
+
+    global $post;
+    if (is_array(get_post_meta($post->ID, 'visible_cities', true))) {
+        add_meta_box('mp_dd_map_building_labels', 'Building Labels', 'mp_dd_map_building_labels', 'map', 'normal', 'high');
+    }
 }
 
 add_action('add_meta_boxes', 'mp_dd_map_meta_boxes');
 
-function mp_dd_map_include_tag()
+function mp_dd_map_include_info()
 {
     global $post;
+    global $wpdb;
     ?>
     <p><code>[map-<?= $post->ID ?>]</code> You can insert this tag in a post to include the map.</p>
+    <?php
+    $cities        = $wpdb->get_results("SELECT ID, post_title FROM $wpdb->posts WHERE post_type = 'city' AND post_status = 'publish'");
+    $cities        = array_combine(array_column($cities, 'ID'), array_column($cities, 'post_title'));
+    $visibleCities = get_post_meta($post->ID, 'visible_cities', true);
+    if (!is_array($visibleCities)) {
+        $visibleCities = array();
+    }
+    ?>
+    <table>
+        <tr>
+            <td><label for="visible_cities">Visible Cities</label></td>
+            <td>
+                <select id="visible_cities" name="visible_cities[]" multiple>
+                    <?php foreach ($cities as $id => $city): ?>
+                        <option value="<?= $id ?>" <?= in_array($id, $visibleCities) ? 'selected' : '' ?>><?= $city ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+        </tr>
+    </table>
     <?php
 }
 
 function mp_dd_map_building_labels()
 {
     global $post;
-    $buildingLabels = get_post_meta($post->ID, 'building_labels', true);
-    foreach ($buildingLabels as $buildingLabel) {
-        ?>
-        <table style="position: relative; display: inline-block; border: 1px solid black;">
-            <tr>
-                <td><label>Label</label></td>
-                <td><input type="number" name="label[]" style="width: 75px;" title="label" value="<?= $buildingLabel['id'] ?>"></td>
-            </tr>
-            <tr>
-                <td><label>Building</label></td>
-                <td><input type="number" name="wp_id[]" style="width: 75px;" title="wp_id" value="<?= isset($buildingLabel['wp_id']) ? $buildingLabel['wp_id'] : '' ?>"></td>
-            </tr>
-            <tr>
-                <td><label>Top</label></td>
-                <td><input type="number" name="top[]" style="width: 75px;" title="top" value="<?= $buildingLabel['top'] ?>"></td>
-            </tr>
-            <tr>
-                <td><label>Left</label></td>
-                <td><input type="number" name="left[]" style="width: 75px;" title="left" value="<?= $buildingLabel['left'] ?>"></td>
-            </tr>
-        </table>
-        <?php
+    $visibleCities     = get_post_meta($post->ID, 'visible_cities', true);
+    $allBuildingLabels = get_post_meta($post->ID, 'building_labels', true);
+    $allBuildingLabels = array_combine(array_column($allBuildingLabels, 'id'), $allBuildingLabels);
+    foreach ($visibleCities as $visibleCity) {
+        $args           = array(
+            'post_type'  => 'building',
+            'meta_query' => array(
+                array(
+                    'key'     => 'city',
+                    'value'   => $visibleCity,
+                    'compare' => '=',
+                ),
+            ),
+        );
+        $cityBuildings  = get_posts($args);
+        $buildingLabels = array();
+        /** @var WP_Post $building */
+        foreach ($cityBuildings as $building) {
+            if (array_key_exists($building->ID, $allBuildingLabels)) {
+                $buildingLabels[$building->ID] = $allBuildingLabels[$building->ID];
+            } else {
+                $buildingType = get_post_meta($building->ID, 'type', true);
+                switch ($buildingType) {
+                    case 'merchants':
+                        $color = '#6a1b9a';
+                        break;
+                    case 'guardhouses':
+                        $color = '#1976d2';
+                        break;
+                    case 'churches':
+                        $color = '#d50000';
+                        break;
+                    case 'guilds':
+                        $color = '#1b5e20';
+                        break;
+                    default:
+                        $color = '#000000';
+                        break;
+                }
+                $buildingLabels[$building->ID] = array(
+                    'id'      => $building->ID,
+                    'showing' => false,
+                    'label'   => $building->post_title,
+                    'top'     => 0,
+                    'left'    => 0,
+                    'color'   => $color,
+                );
+            }
+        }
+
+        foreach ($buildingLabels as $buildingLabel) {
+            ?>
+            <table style="position: relative; display: inline-block; border: 1px solid black; margin-right: 4px;">
+                <tbody>
+                <tr>
+                    <td><label>Building</label></td>
+                    <td>
+                        <input type="hidden" name="id[]" value="<?= $buildingLabel['id'] ?>">
+                        <input type="hidden" name="color[]" value="<?= $buildingLabel['color'] ?>">
+                        <?= $buildingLabel['id'] ?>
+                    </td>
+                    <td align="right">
+                        <select name="showing[]" title="Showing">
+                            <option value="true" <?= $buildingLabel['showing'] ? 'selected' : '' ?>>Showing</option>
+                            <option value="false" <?= !$buildingLabel['showing'] ? 'selected' : '' ?>>Hidden</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label>Label</label></td>
+                    <td colspan="2"><input type="text" name="label[]" value="<?= $buildingLabel['label'] ?>" title="Label" style="width: 125px;"></td>
+                </tr>
+                <tr>
+                    <td><label>Top</label></td>
+                    <td colspan="2"><input type="number" name="top[]" value="<?= $buildingLabel['top'] ?>" title="Top" style="width: 125px;"></td>
+                </tr>
+                <tr>
+                    <td><label>Left</label></td>
+                    <td colspan="2"><input type="number" name="left[]" value="<?= $buildingLabel['left'] ?>" title="Left" style="width: 125px;"></td>
+                </tr>
+                </tbody>
+            </table>
+            <?php
+        }
     }
 }
 
@@ -146,41 +233,17 @@ function mp_dd_map_save_meta($post_id)
     }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        update_post_meta($post_id, 'visible_cities', $_POST['visible_cities']);
         $buildingLabels = array();
-        if (isset($_POST['label']) && isset($_POST['wp_id']) && isset($_POST['top']) && isset($_POST['left'])) {
+        if (isset($_POST['id']) && isset($_POST['color']) && isset($_POST['showing']) && isset($_POST['label']) && isset($_POST['top']) && isset($_POST['left'])) {
             for ($i = 0; $i < count($_POST['label']); $i++) {
-                if (!empty($_POST['wp_id'][$i])) {
-                    $building = get_post($_POST['wp_id'][$i]);
-                    $link  = true;
-                    $buildingType = get_post_meta($building->ID, 'type', true);
-                    switch ($buildingType) {
-                        case 'merchants':
-                            $color = '#6a1b9a';
-                            break;
-                        case 'guardhouses':
-                            $color = '#1976d2';
-                            break;
-                        case 'churches':
-                            $color = '#d50000';
-                            break;
-                        case 'guilds':
-                            $color = '#1b5e20';
-                            break;
-                        default:
-                            $color = '#000000';
-                            break;
-                    }
-                } else {
-                    $link  = false;
-                    $color = '#000000';
-                }
                 $buildingLabels[] = array(
-                    'id'    => $_POST['label'][$i],
-                    'wp_id' => $_POST['wp_id'][$i],
-                    'top'   => $_POST['top'][$i],
-                    'left'  => $_POST['left'][$i],
-                    'link'  => $link,
-                    'color' => $color,
+                    'id'      => $_POST['id'][$i],
+                    'color'   => $_POST['color'][$i],
+                    'showing' => filter_var($_POST['showing'][$i], FILTER_VALIDATE_BOOLEAN),
+                    'label'   => $_POST['label'][$i],
+                    'top'     => $_POST['top'][$i],
+                    'left'    => $_POST['left'][$i],
                 );
             }
             update_post_meta($post_id, 'building_labels', $buildingLabels);
@@ -190,70 +253,4 @@ function mp_dd_map_save_meta($post_id)
 }
 
 add_action('save_post_map', 'mp_dd_map_save_meta');
-#endregion
-
-#region Post Content
-function mp_dd_filter_map_content($content)
-{
-    global $post;
-    if (preg_match_all("/\[map-([0-9]+)\]/", $content, $mapMatches) || $post->post_type == 'map') {
-        if (preg_match_all("/\[map-([0-9]+)\]/", $content, $mapMatches)) {
-            foreach ($mapMatches[1] as $mapID) {
-                $map     = get_post($mapID);
-                $mapHTML = $map->post_content;
-                if (strpos($mapHTML, '[building-labels]') !== false) {
-                    $buildingLabels = get_post_meta($mapID, 'building_labels', true);
-                    ob_start();
-                    foreach ($buildingLabels as $buildingLabel) {
-                        ?>
-                        <div style="position:absolute; top:<?= $buildingLabel['top'] ?>px; left:<?= $buildingLabel['left'] ?>px;">
-                            <?php if ($buildingLabel['link']): ?>
-                                <?php $url = isset($buildingLabel['wp_id']) ? '[building-url-' . $buildingLabel['wp_id'] . ']' : '#modal' . $buildingLabel['id']; ?>
-                                <a href="<?= $url ?>"
-                                   style="color: #FFFFFF; background: rgba(0,0,0,0.6); height: 30px; width: 30px; text-align: center; display: block; border: 3px solid <?= $buildingLabel['color'] ?>; border-radius: 20%;font-size: 9px;line-height: 25px;">
-                                    <?= $buildingLabel['id'] ?>
-                                </a>
-                            <?php else: ?>
-                                <p style="color: #000000; background: #FFFFFF; height: 30px; width: 30px; text-align: center; display: block; border: 3px solid black; border-radius: 20%; margin: 0;font-size: 9px;line-height: 25px;">
-                                    <?= $buildingLabel['id'] ?>
-                                </p>
-                            <?php endif; ?>
-                        </div>
-                        <?php
-                    }
-                    $mapHTML = str_replace('[building-labels]', ob_get_clean(), $mapHTML);
-                }
-                $content = str_replace("[map-$mapID]", $mapHTML, $content);
-            }
-        }
-        if ($post->post_type == 'map') {
-            if (strpos($content, '[building-labels]') !== false) {
-                $buildingLabels = get_post_meta($post->ID, 'building_labels', true);
-                ob_start();
-                foreach ($buildingLabels as $buildingLabel) {
-                    ?>
-                    <div style="position:absolute; top:<?= $buildingLabel['top'] ?>px; left:<?= $buildingLabel['left'] ?>px; z-index: 100">
-                        <?php if ($buildingLabel['link']): ?>
-                            <?php $url = isset($buildingLabel['wp_id']) ? '[building-url-' . $buildingLabel['wp_id'] . ']' : '#modal' . $buildingLabel['id']; ?>
-                            <a href="<?= $url ?>"
-                               style="color: #FFFFFF; background: rgba(0,0,0,0.6); height: 30px; width: 30px; text-align: center; display: block; border: 3px solid <?= $buildingLabel['color'] ?>; border-radius: 20%;font-size: 9px;line-height: 25px;">
-                                <?= $buildingLabel['id'] ?>
-                            </a>
-                        <?php else: ?>
-                            <p style="color: #000000; background: #FFFFFF; height: 30px; width: 30px; text-align: center; display: block; border: 3px solid black; border-radius: 20%; margin: 0;font-size: 9px;line-height: 25px;">
-                                <?= $buildingLabel['id'] ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                    <?php
-                }
-                $content = str_replace('[building-labels]', ob_get_clean(), $content);
-            }
-        }
-    }
-
-    return $content;
-}
-
-add_filter('the_content', 'mp_dd_filter_map_content');
 #endregion

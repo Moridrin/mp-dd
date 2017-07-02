@@ -28,6 +28,7 @@ require_once 'include/JSLikeHTMLElement.php';
 
 require_once 'models/City.php';
 
+require_once 'custom-post-type/post-content-parser.php';
 require_once 'custom-post-type/city.php';
 require_once 'custom-post-type/map.php';
 require_once 'custom-post-type/building.php';

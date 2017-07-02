@@ -174,96 +174,27 @@ function mp_dd_building_info()
 
 #endregion
 
-#region Post Content
-function mp_dd_filter_building_content($content)
+#region Save Meta
+/**
+ * @param $post_id
+ *
+ * @return int the post_id
+ */
+function mp_dd_building_save_meta($post_id)
 {
-    global $post;
-    $ownerID = get_post_meta($post->ID, 'owner', true);
-    if ($ownerID) {
-        $content         = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
-        $ownerWithFamily = "[npc$1-$ownerID]";
-        $spouse          = get_post_meta($ownerID, 'spouse', true);
-        if ($spouse) {
-            $ownerWithFamily .= "[npc$1-$spouse]";
-        }
-        $children = get_post_meta($ownerID, 'children', true);
-        foreach ($children as $child) {
-            $ownerWithFamily .= "[npc$1-$child]";
-        }
-        $content = preg_replace('/\[npc(-li)?-owner-with-family\]/', $ownerWithFamily, $content);
+    if (!current_user_can('edit_post', $post_id)) {
+        return $post_id;
     }
 
-    if (preg_match_all("/\[building-url-([0-9]+)\]/", $content, $buildingURLMatches)) {
-        foreach ($buildingURLMatches[1] as $buildingID) {
-            $building = get_post($buildingID);
-            $content  = str_replace("[building-url-$buildingID]", "#modal_$buildingID", $content);
-            if (strpos($content, "id=\"modal_$buildingID\"") === false) {
-                $content .= "<div id=\"modal_$buildingID\" class=\"modal modal-fixed-footer\">";
-                $content .= "<div class=\"modal-content\">";
-                $content .= '<h2>' . $building->post_title . '</h2>';
-//                $content .= preg_replace('/\[npc-([0-9]+)\]/', "[npc-li-$1]", $building->post_content);
-                $content .= $building->post_content;
-                $content .= '</div></div>';
-            }
-            $ownerID = get_post_meta($building->ID, 'owner', true);
-            if ($ownerID) {
-                $content         = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
-                $ownerWithFamily = "[npc$1-$ownerID]";
-                $spouse          = get_post_meta($ownerID, 'spouse', true);
-                if ($spouse) {
-                    $ownerWithFamily .= "[npc$1-$spouse-spouse]";
-                }
-                $children = get_post_meta($ownerID, 'children', true);
-                foreach ($children as $child) {
-                    $ownerWithFamily .= "[npc$1-$child-child]";
-                }
-                $content = preg_replace('/\[npc(-li)?-owner-with-family\]/', $ownerWithFamily, $content);
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        foreach (array('city', 'info', 'owner') as $key) {
+            if (isset($_POST[$key])) {
+                update_post_meta($post_id, $key, $_POST[$key]);
             }
         }
     }
-    if (preg_match_all("/\[building-link-([0-9]+)\]/", $content, $buildingLinkMatches)) {
-        foreach ($buildingLinkMatches[1] as $buildingID) {
-            $building      = get_post($buildingID);
-            $buildingTitle = $building->post_title;
-            $content       = str_replace("[building-link-$buildingID]", "<a href=\"#modal_$buildingID\">$buildingTitle</a>", $content);
-            if (strpos($content, "id=\"modal_$buildingID\"") === false) {
-                $content .= "<div id=\"modal_$buildingID\" class=\"modal modal-fixed-footer\">";
-                $content .= "<div class=\"modal-content\">";
-                $content .= "<h2>$buildingTitle</h2>";
-                $content .= $building->post_content;
-                $content .= "</div></div>";
-            }
-            $ownerID = get_post_meta($building->ID, 'owner', true);
-            if ($ownerID) {
-                $content         = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $content);
-                $ownerWithFamily = "[npc$1-$ownerID]";
-                $spouse          = get_post_meta($ownerID, 'spouse', true);
-                if ($spouse) {
-                    $ownerWithFamily .= "[npc$1-$spouse]";
-                }
-                $children = get_post_meta($ownerID, 'children', true);
-                foreach ($children as $child) {
-                    $ownerWithFamily .= "[npc$1-$child]";
-                }
-                $content = preg_replace('/\[npc(-li)?-owner-with-family\]/', $ownerWithFamily, $content);
-            }
-        }
-    }
-    if (preg_match_all("/\[building-title-([0-9]+)\]/", $content, $buildingTitleMatches)) {
-        foreach ($buildingTitleMatches[1] as $buildingID) {
-            $building = get_post($buildingID);
-            $content  = str_replace("[building-title-$buildingID]", $building->post_title, $content);
-        }
-    }
-    if (preg_match_all("/\[building-content-([0-9]+)\]/", $content, $buildingContentMatches)) {
-        foreach ($buildingContentMatches[1] as $buildingID) {
-            $building = get_post($buildingID);
-            $content  = str_replace("[building-content-$buildingID]", $building->post_content, $content);
-        }
-    }
-
-    return $content;
+    return $post_id;
 }
 
-add_filter('the_content', 'mp_dd_filter_building_content');
+add_action('save_post_building', 'mp_dd_building_save_meta');
 #endregion

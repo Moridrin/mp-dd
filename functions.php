@@ -58,6 +58,13 @@ if (!function_exists('mp_edit_form_after_title')) {
     add_action('edit_form_after_title', 'mp_edit_form_after_title');
 }
 
+//function mp_dd_post_deleted($post_id)
+//{
+//    wp_delete_post($post_id, true);
+//}
+//
+//add_action('delete_post', 'mp_dd_post_deleted', 10);
+
 #region Functions that should be in PHP
 if (!function_exists('mp_var_export')) {
     /**
