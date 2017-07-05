@@ -47,6 +47,7 @@ class MP_DD
     const HOOK_RESET_OPTIONS = 'mp_dd__hook_reset_options';
 
     const OPTION_PUBLISH_ERROR = 'mp_dd__option_publish_error';
+    const OPTION_LAST_CITY_REMOVED = 'mp_dd__option_last_city_removed';
     #endregion
 
     #region resetOptions()

@@ -136,14 +136,15 @@ function mp_dd_map_building_labels()
     $allBuildingLabels = array_combine(array_column($allBuildingLabels, 'id'), $allBuildingLabels);
     foreach ($visibleCities as $visibleCity) {
         $args           = array(
-            'post_type'  => 'building',
-            'meta_query' => array(
+            'post_type'      => 'building',
+            'meta_query'     => array(
                 array(
                     'key'     => 'city',
                     'value'   => $visibleCity,
                     'compare' => '=',
                 ),
             ),
+            'posts_per_page' => -1,
         );
         $cityBuildings  = get_posts($args);
         $buildingLabels = array();
@@ -233,9 +234,11 @@ function mp_dd_map_save_meta($post_id)
     }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        update_post_meta($post_id, 'visible_cities', $_POST['visible_cities']);
-        $buildingLabels = array();
+        if (isset($_POST['visible_cities'])) {
+            update_post_meta($post_id, 'visible_cities', $_POST['visible_cities']);
+        }
         if (isset($_POST['id']) && isset($_POST['color']) && isset($_POST['showing']) && isset($_POST['label']) && isset($_POST['top']) && isset($_POST['left'])) {
+            $buildingLabels = array();
             for ($i = 0; $i < count($_POST['label']); $i++) {
                 $buildingLabels[] = array(
                     'id'      => $_POST['id'][$i],

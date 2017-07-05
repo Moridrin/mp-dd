@@ -58,12 +58,30 @@ if (!function_exists('mp_edit_form_after_title')) {
     add_action('edit_form_after_title', 'mp_edit_form_after_title');
 }
 
-//function mp_dd_post_deleted($post_id)
-//{
-//    wp_delete_post($post_id, true);
-//}
-//
-//add_action('delete_post', 'mp_dd_post_deleted', 10);
+#region Update Settings Message.
+function mp_ssv_events_update_settings_notification()
+{
+    $lastCityRemoved = get_option(MP_DD::OPTION_LAST_CITY_REMOVED);
+    if ($lastCityRemoved !== false) {
+        ?>
+        <div class="notice notice-warning is-dismissible">
+            <p>Do you also want to remove all buildings, maps and NPCs linked to this city?</p>
+            <p><a href="/wp-admin/admin.php?page=mp_dd_settings&tab=general&city=<?= $lastCityRemoved ?>">Set Now</a></p>
+        </div>
+        <?php
+        delete_option(MP_DD::OPTION_LAST_CITY_REMOVED);
+    }
+}
+
+add_action('admin_notices', 'mp_ssv_events_update_settings_notification');
+#endregion
+
+function mp_dd_post_deleted($post_id)
+{
+    update_option(MP_DD::OPTION_LAST_CITY_REMOVED, $post_id);
+}
+
+add_action('delete_post', 'mp_dd_post_deleted', 10);
 
 #region Functions that should be in PHP
 if (!function_exists('mp_var_export')) {

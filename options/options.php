@@ -17,6 +17,22 @@ add_action('admin_menu', 'mp_dd_add_menu', 9);
 #region Page Content
 function mp_dd_general_settings_page()
 {
-    echo '//TODO Add some settings';
+    $active_tab = "general";
+    if (isset($_GET['tab'])) {
+        $active_tab = $_GET['tab'];
+    }
+    ?>
+    <div class="wrap">
+        <h1>Events Options</h1>
+        <h2 class="nav-tab-wrapper">
+            <a href="?page=<?= esc_html($_GET['page']) ?>&tab=general" class="nav-tab <?= $active_tab == 'general' ? 'active' : '' ?>">General</a>
+            <a href="?page=<?= esc_html($_GET['page']) ?>&tab=remove_recursive" class="nav-tab <?= $active_tab == 'remove_recursive' ? 'active' : '' ?>">Remove Recursive</a>
+        </h2>
+        <?php
+        /** @noinspection PhpIncludeInspection */
+        require_once $active_tab . '.php';
+        ?>
+    </div>
+    <?php
 }
 #endregion

@@ -43,6 +43,9 @@ function mp_dd_filter_content($content)
     }
     if (preg_match_all("/\[building-link-([0-9]+)\]/", $content, $buildingURLMatches)) {
         foreach ($buildingURLMatches[1] as $buildingID) {
+            if (!get_post($buildingID)) {
+                continue;
+            }
             $buildingTitle = get_post($buildingID)->post_title;
             $buildingLink  = "<a href=\"#modal_$buildingID\">$buildingTitle</a>";
             $content       = str_replace("[building-link-$buildingID]", $buildingLink, $content);
@@ -54,6 +57,9 @@ function mp_dd_filter_content($content)
     }
     if (preg_match_all("/\[building-link-with-type-([0-9]+)\]/", $content, $buildingURLMatches)) {
         foreach ($buildingURLMatches[1] as $buildingID) {
+            if (!get_post($buildingID)) {
+                continue;
+            }
             $ownerID         = get_post_meta($buildingID, 'owner', true);
             $ownerProfession = get_post_meta($ownerID, 'profession', true);
             $buildingTitle   = get_post($buildingID)->post_title . ' - ' . $ownerProfession;
@@ -150,6 +156,9 @@ function mp_dd_get_map_content($mapID)
 function mp_dd_get_building_content($buildingID, $inModal = false)
 {
     $building = get_post($buildingID);
+    if (!$building) {
+        return '';
+    }
 
     $buildingHTML = "<h2 style=\"display: inline-block;\">$building->post_title</h2> ($buildingID)<br/>";
     $buildingHTML .= $building->post_content;
