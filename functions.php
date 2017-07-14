@@ -42,6 +42,7 @@ add_filter(MP_DD::HOOK_RESET_OPTIONS, 'mp_dd_reset_options');
 
 function mp_dd_enquire_admin_scripts()
 {
+    wp_enqueue_script('mp_dd_draggable', MP_DD::URL . '/js/mp-dd-draggable.js');
     wp_enqueue_script('mp_dd_buildings', MP_DD::URL . '/js/mp-dd-buildings.js');
     wp_enqueue_script('mp_dd_npcs', MP_DD::URL . '/js/mp-dd-npcs.js');
 }
