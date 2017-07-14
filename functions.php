@@ -76,6 +76,14 @@ function mp_ssv_events_update_settings_notification()
 add_action('admin_notices', 'mp_ssv_events_update_settings_notification');
 #endregion
 
+function mp_dd_enquire_scripts()
+{
+    wp_enqueue_script('chosen', MP_DD::URL . '/include/chosen/chosen.jquery.js', array('jquery'));
+    wp_enqueue_script('init_chosen', MP_DD::URL . '/include/chosen/init-chosen.js', array('jquery'));
+    wp_enqueue_style('chosen', MP_DD::URL . '/include/chosen/chosen.css');
+}
+add_action('admin_enqueue_scripts', 'mp_dd_enquire_scripts');
+
 function mp_dd_post_deleted($post_id)
 {
     update_option(MP_DD::OPTION_LAST_CITY_REMOVED, $post_id);
