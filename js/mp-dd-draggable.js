@@ -1,41 +1,41 @@
-var offset_data; //Global variable as Chrome doesn't allow access to event.dataTransfer in dragover
+// target elements with the "draggable" class
+interact('.mp-draggable')
+    .draggable({
+        // enable inertial throwing
+        inertia: true,
+        // keep the element within the area of it's parent
+        restrict: {
+            restriction: "parent",
+            endOnly: true,
+            elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+        },
+        // enable autoScroll
+        autoScroll: true,
 
-function drag_start(event) {
-    var style = window.getComputedStyle(event.target, null);
-    offset_data = (parseInt(style.getPropertyValue("left"), 10) - event.clientX) + ',' + (parseInt(style.getPropertyValue("top"), 10) - event.clientY);
-    event.dataTransfer.setData("text/plain", offset_data);
+        // call this function on every dragmove event
+        onmove: dragMoveListener,
+        // call this function on every dragend event
+        onend: function (event) {
+            var locationField = event.target.querySelector('input');
+            locationField && (locationField.value = event.target.style.transform);
+        }
+    });
+
+function dragMoveListener (event) {
+    var target = event.target,
+        // keep the dragged position in the data-x/data-y attributes
+        x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+        y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+    // translate the element
+    target.style.webkitTransform =
+        target.style.transform =
+            'translate(' + x + 'px, ' + y + 'px)';
+
+    // update the posiion attributes
+    target.setAttribute('data-x', x);
+    target.setAttribute('data-y', y);
 }
-function drag_over(event) {
-    var offset;
-    try {
-        offset = event.dataTransfer.getData("text/plain").split(',');
-    }
-    catch (e) {
-        offset = offset_data.split(',');
-    }
-    var dm = document.getElementById('dragme');
-    dm.style.left = (event.clientX + parseInt(offset[0], 10)) + 'px';
-    dm.style.top = (event.clientY + parseInt(offset[1], 10)) + 'px';
-    event.preventDefault();
-    return false;
-}
-function drop(event) {
-    var offset;
-    try {
-        offset = event.dataTransfer.getData("text/plain").split(',');
-    }
-    catch (e) {
-        offset = offset_data.split(',');
-    }
-    var dm = document.getElementById('dragme');
-    dm.style.left = (event.clientX + parseInt(offset[0], 10)) + 'px';
-    dm.style.top = (event.clientY + parseInt(offset[1], 10)) + 'px';
-    event.preventDefault();
-    return false;
-}
-window.onload = function () {
-    var dm = document.getElementById('dragme');
-    dm.addEventListener('dragstart', drag_start, false);
-    document.body.addEventListener('dragover', drag_over, false);
-    document.body.addEventListener('drop', drop, false);
-};
+
+// this is used later in the resizing and gesture demos
+window.dragMoveListener = dragMoveListener;

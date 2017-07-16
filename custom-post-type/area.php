@@ -114,7 +114,8 @@ add_action('init', 'mp_dd_area_type_taxonomy');
 function mp_dd_area_meta_boxes()
 {
     add_meta_box('mp_dd_area_include_tag', 'Tags', 'mp_dd_area_include_tag', 'area', 'after_title', 'high');
-    add_meta_box('mp_dd_area_info', 'Info', 'mp_dd_area_info', 'area', 'after_title', 'high');
+    add_meta_box('mp_dd_area_info', 'Info', 'mp_dd_area_info', 'area', 'advanced', 'high');
+    add_meta_box('mp_dd_area_map', 'Map', 'mp_dd_area_map', 'area', 'advanced', 'high');
 }
 
 add_action('add_meta_boxes', 'mp_dd_area_meta_boxes');
@@ -135,27 +136,63 @@ function mp_dd_area_info()
 {
     global $post;
     global $wpdb;
-    $postID = $post->ID;
-    $sql = "SELECT ID, post_title FROM $wpdb->posts WHERE (post_type = 'area' OR post_type = 'npc' OR post_type = 'item') AND post_status = 'publish' AND ID != $postID";
-    $objects   = $wpdb->get_results($sql);
-    $objects   = array_combine(array_column($objects, 'ID'), array_column($objects, 'post_title'));
+    $postID         = $post->ID;
+    $sql            = "SELECT ID, post_title FROM $wpdb->posts WHERE (post_type = 'area' OR post_type = 'npc' OR post_type = 'item') AND post_status = 'publish' AND ID != $postID";
+    $objects        = $wpdb->get_results($sql);
+    $objects        = array_combine(array_column($objects, 'ID'), array_column($objects, 'post_title'));
     $visibleObjects = get_post_meta($postID, 'visible_objects', true);
     $visibleObjects = !is_array($visibleObjects) ? [] : $visibleObjects;
     ?>
-    <select data-placeholder="Visible Objects..." class="chosen-select" multiple style="width: 100%" name="visible_objects[]">
+    <label for="visible_objects">Visible Objects</label>
+    <select data-placeholder="Visible Objects..." id="visible_objects" class="chosen-select" multiple style="width: 100%" name="visible_objects[]">
         <option value=""></option>
         <?php foreach ($objects as $id => $title): ?>
             <option value="<?= $id ?>" <?= in_array($id, $visibleObjects) ? 'selected' : '' ?>><?= $title ?> [<?= $id ?>]</option>
         <?php endforeach; ?>
     </select>
     <br/>
-    A visible object is an object you usually would display on the map of that area. For example:<br/>
+    A visible object is an object you display on the map of that area. For example:<br/>
     <ul style="padding-left: 20px; list-style: disc">
         <li>If the area is a city, the buildings in the city would be visible objects but the rooms in the buildings aren't.</li>
-        <li>If the area is a building, the rooms and possably the residents/workers could be objects to note here.</li>
-        <li>if the area is a room, the visible objects could be items (such as a magic sword) and npc's (workers/residents or just visitors/guests).</li>
-        <li>If the area is a bandit camp, where you have buildings (tents), npc's (bandits sitting by a campfire) and items (loot) all as visible objects.</li>
+        <li>If the area is a building, the rooms and possibly the residents/workers could be objects to note here.</li>
+        <li>if the area is a room, the visible objects could be items (such as a magic sword) and NPC's (workers/residents or just visitors/guests).</li>
+        <li>If the area is a bandit camp, where you have buildings (tents), NPC's (bandits sitting by a campfire) and items (loot) all as visible objects.</li>
     </ul>
+    <?php
+}
+
+function mp_dd_area_map()
+{
+    global $post;
+    $image_id          = get_post_meta($post->ID, 'map_image_id', true);
+    $image_src         = wp_get_attachment_url($image_id);
+    $visibleObjects    = get_post_meta($post->ID, 'visible_objects', true);
+    $visibleObjects    = is_array($visibleObjects) ? $visibleObjects : [];
+    $labelTranslations = get_post_meta($post->ID, 'label_translations', true);
+    $labelTranslations = is_array($labelTranslations) ? $labelTranslations : [];
+
+    ?>
+    <div style="overflow-x: auto; overflow-y: hidden;">
+        <div id="map" style="margin: auto; position: relative">
+            <img id="map_image" src="<?= $image_src ?>"/>
+            <?php $number = 1; ?>
+            <?php foreach ($visibleObjects as $visibleObject): ?>
+                <?php list($left, $top) = isset($labelTranslations[$visibleObject]) ? $labelTranslations[$visibleObject] : 'translate(0px, 0px)'; ?>
+                <aside draggable="true" class="mp-draggable merchants-label" style="left: <?= $left ?>px; top: <?= $top ?>px">
+                    <?= $number ?>
+                    <input type="hidden" name="label_translations[<?= $visibleObject ?>]" value="translate(0px, 0px)">
+                </aside>
+                <?php ++$number; ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <input type="hidden" name="map_image_id" id="upload_image_id" value="<?php echo $image_id; ?>"/>
+    <p>
+        <a title="<?php esc_attr_e('Set book image') ?>" href="#"
+           id="set-map-image"><?php _e('Set book image') ?></a>
+        <a title="<?php esc_attr_e('Remove book image') ?>" href="#" id="remove-map-image"
+           style="<?php echo(!$image_id ? 'display:none;' : ''); ?>"><?php _e('Remove book image') ?></a>
+    </p>
     <?php
 }
 
@@ -174,7 +211,20 @@ function mp_dd_area_save_meta($post_id)
     }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        foreach (['visible_objects'] as $key) {
+        $labelTranslations = get_post_meta($post_id, 'label_translations', true);
+        $labelTranslations = is_array($labelTranslations) ? $labelTranslations : [];
+        foreach ($_POST['label_translations'] as $key => $value) {
+            preg_match("/\((.*?)p?x?, (.*?)p?x?\)/", $value, $matches);
+            list($original, $left, $top) = $matches;
+            if (isset($labelTranslations[$key])) {
+                list($leftOld, $topOld) = $labelTranslations[$key];
+                $left += $leftOld;
+                $top  += $topOld;
+            }
+            $labelTranslations[$key] = [$left, $top];
+        }
+        update_post_meta($post_id, 'label_translations', $labelTranslations);
+        foreach (['visible_objects', 'map_image_id'] as $key) {
             if (isset($_POST[$key])) {
                 update_post_meta($post_id, $key, $_POST[$key]);
             } else {

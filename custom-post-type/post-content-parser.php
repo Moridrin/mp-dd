@@ -112,6 +112,7 @@ function mp_dd_filter_content($content)
 }
 
 add_filter('the_content', 'mp_dd_filter_content');
+#endregion
 
 #region Get Map
 /**
@@ -131,8 +132,7 @@ function mp_dd_get_map_content($mapID)
             <div style="position:absolute; top:<?= $buildingLabel['top'] ?>px; left:<?= $buildingLabel['left'] ?>px; z-index: 100">
                 <?php if ($buildingLabel['showing']): ?>
                     <?php $url = isset($buildingLabel['id']) ? '[building-url-' . $buildingLabel['id'] . ']' : '#modal' . $buildingLabel['id']; ?>
-                    <a href="<?= $url ?>"
-                       style="color: #FFFFFF; background: rgba(0,0,0,0.6); height: 30px; width: 30px; text-align: center; display: block; border: 3px solid <?= $buildingLabel['color'] ?>; border-radius: 20%;font-size: 9px;line-height: 25px;">
+                    <a href="<?= $url ?>" style="color: #FFFFFF; background: rgba(0,0,0,0.6); height: 30px; width: 30px; text-align: center; display: block; border: 3px solid <?= $buildingLabel['color'] ?>; border-radius: 20%;font-size: 9px;line-height: 25px;">
                         <?= $buildingLabel['label'] ?>
                     </a>
                 <?php endif; ?>
@@ -229,5 +229,4 @@ function mp_dd_get_npc_content($npcID, $isSpouse = false, $isChild = false)
 
     return $npcHTML;
 }
-#endregion
 #endregion

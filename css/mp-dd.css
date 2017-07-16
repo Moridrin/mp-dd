@@ -1,0 +1,22 @@
+.merchants-label {
+    position: absolute;
+    display: block;
+    color: #FFFFFF;
+    background: rgba(0, 0, 0, 0.6);
+    height: 30px;
+    width: 30px;
+    text-align: center;
+    border: 3px solid #6A1B9A;
+    border-radius: 20%;
+    font-family: monospace;
+    font-size: small;
+    line-height: 24px;
+}
+
+.mp-draggable {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    line-height: 30px;
+}
