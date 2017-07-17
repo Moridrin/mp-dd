@@ -43,13 +43,27 @@ function mp_dd_get_map(WP_Post $post): string
             <img id="map_image" src="<?= $image_src ?>"/>
             <?php $number = 1; ?>
             <?php foreach ($visibleObjects as $visibleObject): ?>
-                <?php mp_var_export(wp_get_post_terms($visibleObject, 'area_type'), 1); ?>
+                <?php $labelColor = mp_dd_get_area_label_color(wp_get_post_terms($visibleObject, 'area_type')); ?>
                 <?php list($left, $top) = isset($labelTranslations[$visibleObject]) ? $labelTranslations[$visibleObject] : 'translate(0px, 0px)'; ?>
-                <a href="[object-<?= $visibleObject ?>-url]" class="<?= get_post_meta($visibleObject, 'object_type', true) ?>-label" style="left: <?= $left + 3 ?>px; top: <?= $top + 3 ?>px"><?= $number ?></a>
+                <a href="[object-<?= $visibleObject ?>-url]" class="area-label" style="left: <?= $left + 3 ?>px; top: <?= $top + 3 ?>px; border: 3px solid <?= $labelColor ?>;"><?= $number ?></a>
                 <?php ++$number; ?>
             <?php endforeach; ?>
         </div>
     </div>
+    <div class="row">
+        <?php foreach (get_terms('area_type') as $term): ?>
+            <?php $color = empty($term->description) ? '#A0A0A0' : $term->description; ?>
+            <div class="col s12 m3 area-label-legend" style="border: 3px solid <?= $color ?>"><?= $term->name ?></div>
+        <?php endforeach; ?>
+    </div>
     <?php
     return ob_get_clean();
+}
+
+function mp_dd_get_area_label_color(array $terms): string
+{
+    /** @var WP_Term $term */
+    $term = end($terms);
+    $color = $term->description;
+    return empty($color) ? '#A0A0A0' : $color;
 }

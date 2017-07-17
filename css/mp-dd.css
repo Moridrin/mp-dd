@@ -1,4 +1,4 @@
-.merchants-label {
+.area-label {
     position: absolute;
     display: block;
     color: #FFFFFF;
@@ -6,11 +6,21 @@
     height: 30px;
     width: 30px;
     text-align: center;
-    border: 3px solid #6A1B9A;
+    border: 3px solid #FFFFFF;
     border-radius: 20%;
     font-family: monospace;
     font-size: small;
     line-height: 24px;
+}
+
+.area-label-legend {
+    display: block;
+    color: #FFFFFF;
+    background: black;
+    text-align: center;
+    border: 3px solid #FFFFFF;
+    font-family: monospace;
+    font-size: small;
 }
 
 .mp-draggable {
