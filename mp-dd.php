@@ -31,9 +31,9 @@ require_once 'models/City.php';
 require_once 'custom-post-type/post-content-parser2.php';
 require_once 'custom-post-type/area.php';
 //require_once 'custom-post-type/map.php';
-require_once 'custom-post-type/building.php';
+//require_once 'custom-post-type/building.php';
 require_once 'custom-post-type/npc.php';
-require_once 'custom-post-type/custom-post-type-image-upload.php';
+//require_once 'custom-post-type/custom-post-type-image-upload.php';
 
 require_once 'options/options.php';
 #endregion

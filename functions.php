@@ -114,6 +114,9 @@ if (!function_exists('mp_var_export')) {
         if ($variable instanceof DOMElement || $variable instanceof DOMText) {
             $variable = $variable->ownerDocument->saveHTML($variable);
         }
+        if ($variable instanceof simple_html_dom || $variable instanceof simple_html_dom_node) {
+            $variable = (string) $variable;
+        }
         if (mp_has_circular_reference($variable)) {
             ob_start();
             var_dump($variable);

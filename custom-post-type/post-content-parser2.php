@@ -6,7 +6,7 @@
  * Time: 9:48
  */
 
-#region Post Content
+#region Filter
 /**
  * @param string $content
  *
@@ -19,7 +19,7 @@ function mp_dd_filter_content($content)
     if ($post->post_type == 'area') {
         $content = mp_dd_filter_area_content($content, $post);
     }
-    $content = mp_dd_filter_modal_tags($content);
+    $content = mp_dd_filter_object_tags($content);
     return $content;
 }
 
@@ -32,7 +32,7 @@ function mp_dd_filter_area_content($content, $post)
     return $content;
 }
 
-function mp_dd_filter_modal_tags($content, $makeModal = true, $top = null)
+function mp_dd_filter_object_tags($content, $makeModal = true, $top = null)
 {
     if (preg_match_all('/\[object-(\d+)-url\]/', $content, $matches)) {
         foreach ($matches[1] as $objectID) {
@@ -97,14 +97,9 @@ function mp_dd_get_area_label_color(array $terms): string
     $color = $term->description;
     return empty($color) ? '#A0A0A0' : $color;
 }
+#endregion
 
-function mp_dd_make_modal(string $content, int $objectID): string
-{
-    $modalStart = "<div id=\"modal_$objectID\" class=\"modal modal-fixed-footer\"><div id='modal_top'></div><div class=\"modal-content\">";
-    $modalEnd   = "</div></div>";
-    return $modalStart . $content . $modalEnd;
-}
-
+#region Object Content
 function mp_dd_get_object_content(int $objectID, $top = null): string
 {
     $object = get_post($objectID);
@@ -126,7 +121,7 @@ function mp_dd_get_area_content(int $areaID, $top = null): string
     $topLink = $top !== null ? "<a href='#$top'>&uarr;</a>" : '';
     ?>
     <div><a href="<?= $postLink ?>" style="color:inherit;"><h1 id="<?= $areaID ?>" style="display: inline-block;"><?= $area->post_title ?></h1></a> <?= $topLink ?></div>
-    <?= mp_dd_filter_modal_tags(mp_dd_filter_area_content($area->post_content, $area), false, $areaID); ?>
+    <?= mp_dd_filter_object_tags(mp_dd_filter_area_content($area->post_content, $area), false, $areaID); ?>
     <?php
     return ob_get_clean();
 }
@@ -163,6 +158,13 @@ function mp_dd_get_npc_content(int $npcID, $top = null)
 
     return $npcHTML;
 }
+#endregion
 
-
+#region Other
+function mp_dd_make_modal(string $content, int $objectID): string
+{
+    $modalStart = "<div id=\"modal_$objectID\" class=\"modal modal-fixed-footer\"><div id='modal_top'></div><div class=\"modal-content\">";
+    $modalEnd   = "</div></div>";
+    return $modalStart . $content . $modalEnd;
+}
 #endregion
