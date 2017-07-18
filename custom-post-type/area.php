@@ -178,7 +178,7 @@ function mp_dd_area_map()
             <?php $number = 1; ?>
             <?php foreach ($visibleObjects as $visibleObject): ?>
                 <?php list($left, $top) = isset($labelTranslations[$visibleObject]) ? $labelTranslations[$visibleObject] : 'translate(0px, 0px)'; ?>
-                <aside draggable="true" class="mp-draggable merchants-label" style="left: <?= $left ?>px; top: <?= $top ?>px">
+                <aside draggable="true" class="mp-draggable area-label" style="left: <?= $left ?>px; top: <?= $top ?>px">
                     <?= $number ?>
                     <input type="hidden" name="label_translations[<?= $visibleObject ?>]" value="translate(0px, 0px)">
                 </aside>
