@@ -103,14 +103,24 @@ if (!function_exists('mp_var_export')) {
     /**
      * This function is for development purposes only and lets the developer print a variable in the PHP formatting to inspect what the variable is set to.
      *
-     * @param mixed $variable  any variable that you want to be printed.
-     * @param bool  $die       set true if you want to call die() after the print. $die is ignored if $return is true.
-     * @param bool  $highlight set false if you don't want it to highlight.
+     * @param mixed $variable any variable that you want to be printed.
+     * @param bool $die set true if you want to call die() after the print. $die is ignored if $return is true.
+     * @param bool $highlight set false if you don't want it to highlight.
+     * @param mixed $unique when set it only runs the function if there hasn't been a mp_var_export call with this same $unique value.
      *
      * @return mixed|null|string returns the print in string if $return is true, returns null if $return is false, and doesn't return if $die is true.
      */
-    function mp_var_export($variable, $die = false, $highlight = true)
+    function mp_var_export($variable, $die = false, $highlight = true, $unique = false)
     {
+        if ($unique) {
+            if (!isset($GLOBALS['mp_var_export_unique'])) {
+                $GLOBALS['mp_var_export_unique'] = [];
+            }
+            if (in_array($unique, $GLOBALS['mp_var_export_unique'])) {
+                return;
+            }
+            $GLOBALS['mp_var_export_unique'][] = $unique;
+        }
         if ($variable instanceof DOMElement || $variable instanceof DOMText) {
             $variable = $variable->ownerDocument->saveHTML($variable);
         }
