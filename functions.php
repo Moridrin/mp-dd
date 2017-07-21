@@ -112,6 +112,9 @@ if (!function_exists('mp_var_export')) {
      */
     function mp_var_export($variable, $die = false, $highlight = true, $unique = false)
     {
+        if (isset($GLOBALS['mp_var_export_ignore']) && $GLOBALS['mp_var_export_ignore']) {
+            return;
+        }
         if ($unique) {
             if (!isset($GLOBALS['mp_var_export_unique'])) {
                 $GLOBALS['mp_var_export_unique'] = [];
@@ -161,18 +164,6 @@ if (!function_exists('mp_var_export')) {
             }
         }
         return null;
-    }
-
-    function mp_echo($variable, $die = false)
-    {
-        echo $variable;
-        if ($die) {
-            if (is_string($die)) {
-                die($die);
-            } else {
-                die();
-            }
-        }
     }
 
     /**
