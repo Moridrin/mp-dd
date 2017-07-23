@@ -1,7 +1,5 @@
 <?php
 
-use mp_dd\MP_DD;
-
 if (!defined('ABSPATH')) {
     exit;
 }

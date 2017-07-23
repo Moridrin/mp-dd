@@ -4,6 +4,7 @@ namespace mp_dd\models;
 if (!defined('ABSPATH')) {
     exit;
 }
+
 use WP_Post;
 
 class City

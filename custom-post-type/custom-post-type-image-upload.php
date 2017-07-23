@@ -121,7 +121,9 @@ class Custom_Post_Type_Image_Upload
     {
         global $post;
 
-        $image_id                            = get_post_meta($post->ID, '_image_id', true);
+
+
+        $image_id = get_post_meta($post->ID, '_image_id', true);
         $building_label_12_locationTranslate = get_post_meta($post->ID, 'building_label_12_location', true);
         if ($building_label_12_locationTranslate) {
             list($building12Left, $building12Top) = explode(', ', explode(')', explode('(', $building_label_12_locationTranslate)[1])[0]);
@@ -129,21 +131,14 @@ class Custom_Post_Type_Image_Upload
             $building12Left = 0;
             $building12Top  = 0;
         }
-        $building_label_13_locationTranslate = get_post_meta($post->ID, 'building_label_13_location', true);
-        $image_src                           = wp_get_attachment_url($image_id);
+        $building_label_13_locationTranslate = get_post_meta($post->ID, 'building_label_13_location',true);
+        $image_src = wp_get_attachment_url($image_id);
 
         ?>
         <div style="overflow-x: auto; overflow-y: hidden;">
             <div id="map" style="width: 700px; margin: auto; position: relative">
-                <img id="map_image" src="<?php echo $image_src ?>" style="max-width:100%;"/>
-                <aside draggable="true" class="mp-draggable merchants-label" style="top: <?= $building12Top ?>; left: <?= $building12Left ?>">
-                    12
-                    <input type="hidden" name="building_label_12_location" value="<?= $building_label_12_locationTranslate ?>">
-                </aside>
-                <aside draggable="true" class="mp-draggable merchants-label" style="transform: <?= $building_label_13_locationTranslate ?>">
-                    13
-                    <input type="hidden" name="building_label_13_location" value="<?= $building_label_12_locationTranslate ?>">
-                </aside>
+                <img id="book_image" src="<?php echo $image_src ?>" style="max-width:100%;" />
+                <aside draggable="true" id="dragme" style="position:  absolute; top: -20px; color: #FFFFFF; background: black; height: 30px; width: 30px; text-align: center; display: block; border: 3px solid #6a1b9a; border-radius: 20%;font-size: 9px;line-height: 25px;">12</aside>
             </div>
         </div>
         <input type="hidden" name="upload_image_id" id="upload_image_id" value="<?php echo $image_id; ?>"/>
