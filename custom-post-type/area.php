@@ -210,7 +210,7 @@ function mp_dd_area_save_meta($post_id)
         return $post_id;
     }
 
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['label_translations'])) {
         $labelTranslations = get_post_meta($post_id, 'label_translations', true);
         $labelTranslations = is_array($labelTranslations) ? $labelTranslations : [];
         foreach ($_POST['label_translations'] as $key => $value) {
