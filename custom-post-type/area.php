@@ -177,7 +177,7 @@ function mp_dd_area_map()
             <img id="map_image" src="<?= $image_src ?>"/>
             <?php $number = 1; ?>
             <?php foreach ($visibleObjects as $visibleObject): ?>
-                <?php list($left, $top) = isset($labelTranslations[$visibleObject]) ? $labelTranslations[$visibleObject] : 'translate(0px, 0px)'; ?>
+                <?php list($left, $top) = isset($labelTranslations[$visibleObject]) ? $labelTranslations[$visibleObject] : array(0, 0); ?>
                 <aside draggable="true" class="mp-draggable area-label" style="left: <?= $left ?>px; top: <?= $top ?>px">
                     <?= $number ?>
                     <input type="hidden" name="label_translations[<?= $visibleObject ?>]" value="translate(0px, 0px)">
@@ -210,20 +210,22 @@ function mp_dd_area_save_meta($post_id)
         return $post_id;
     }
 
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['label_translations'])) {
-        $labelTranslations = get_post_meta($post_id, 'label_translations', true);
-        $labelTranslations = is_array($labelTranslations) ? $labelTranslations : [];
-        foreach ($_POST['label_translations'] as $key => $value) {
-            preg_match("/\((.*?)p?x?, (.*?)p?x?\)/", $value, $matches);
-            list($original, $left, $top) = $matches;
-            if (isset($labelTranslations[$key])) {
-                list($leftOld, $topOld) = $labelTranslations[$key];
-                $left += $leftOld;
-                $top  += $topOld;
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if (isset($_POST['label_translations'])) {
+            $labelTranslations = get_post_meta($post_id, 'label_translations', true);
+            $labelTranslations = is_array($labelTranslations) ? $labelTranslations : [];
+            foreach ($_POST['label_translations'] as $key => $value) {
+                preg_match("/\((.*?)p?x?, (.*?)p?x?\)/", $value, $matches);
+                list($original, $left, $top) = $matches;
+                if (isset($labelTranslations[$key])) {
+                    list($leftOld, $topOld) = $labelTranslations[$key];
+                    $left += $leftOld;
+                    $top += $topOld;
+                }
+                $labelTranslations[$key] = [$left, $top];
             }
-            $labelTranslations[$key] = [$left, $top];
+            update_post_meta($post_id, 'label_translations', $labelTranslations);
         }
-        update_post_meta($post_id, 'label_translations', $labelTranslations);
         foreach (['visible_objects', 'map_image_id'] as $key) {
             if (isset($_POST[$key])) {
                 update_post_meta($post_id, $key, $_POST[$key]);
