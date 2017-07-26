@@ -226,12 +226,15 @@ function mp_dd_area_save_meta($post_id)
             }
             update_post_meta($post_id, 'label_translations', $labelTranslations);
         }
-        foreach (['visible_objects', 'map_image_id'] as $key) {
-            if (isset($_POST[$key])) {
-                update_post_meta($post_id, $key, $_POST[$key]);
-            } else {
-                update_post_meta($post_id, $key, []);
-            }
+        if (isset($_POST['visible_objects'])) {
+            update_post_meta($post_id, 'visible_objects', $_POST['visible_objects']);
+        } else {
+            update_post_meta($post_id, 'visible_objects', []);
+        }
+        if (isset($_POST['map_image_id'])) {
+            update_post_meta($post_id, 'map_image_id', $_POST['map_image_id']);
+        } else {
+            update_post_meta($post_id, 'map_image_id', null);
         }
     }
     return $post_id;

@@ -20,29 +20,64 @@ function mp_dd_filter_content($content)
         $content = mp_dd_filter_area_content($content, $post);
     }
     $content = mp_dd_filter_object_tags($content);
+    $content = mp_dd_filter_product_tags($content);
+//    $content = mp_dd_filter_spell_tags($content);
     return $content;
 }
 
 function mp_dd_filter_area_content($content, $post)
 {
-        if (strpos($content, '[map]') === false) {
-            $content = '[map]' . $content;
-        }
+//    mp_var_export(get_post_meta($post->ID, 'map_image_id', true), true);
+    if (strpos($content, '[map]') === false && !empty(get_post_meta($post->ID, 'map_image_id', true))) {
+        $content = '[map]' . $content;
+    }
+    if (strpos($content, '[map]') !== false) {
         $content = str_replace('[map]', mp_dd_get_map($post), $content);
+    }
     return $content;
 }
 
 function mp_dd_filter_object_tags($content, $makeModal = true, $top = null)
 {
-    if (preg_match_all('/\[object-(\d+)-url\]/', $content, $matches)) {
-        foreach ($matches[1] as $objectID) {
-            $target = $makeModal ? "#modal_$objectID" : "#$objectID";
-            $content = str_replace("[object-$objectID-url]", $target, $content);
+    if (preg_match_all('/\[object-(\d+)-(.*?)\]/', $content, $matches)) {
+        foreach ($matches[1] as $key => $objectID) {
+            switch ($matches[2][$key]) {
+                case 'url':
+                    $target = $makeModal ? "#modal_$objectID" : "#$objectID";
+                    $content = str_replace("[object-$objectID-url]", $target, $content);
+                    break;
+                case 'link':
+                default:
+                    $title = get_post($objectID)->post_title;
+                    $target = $makeModal ? "<a href=\"#modal_$objectID\">$title</a>" : "#$objectID";
+                    $content = str_replace("[object-$objectID-link]", $target, $content);
+                    break;
+            }
             if (strpos($content, "id=\"modal_$objectID\"") === false) {
                 $objectContent = mp_dd_get_object_content($objectID, $top);
                 $objectContent = $makeModal ? mp_dd_make_modal($objectContent, $objectID) : $objectContent;
                 $content .= $objectContent;
             }
+        }
+    }
+    if (preg_match_all('/\[object-(\d+)\]/', $content, $matches)) {
+        foreach ($matches[1] as $objectID) {
+            $target = mp_dd_get_object_content($objectID, $top);
+            $content = str_replace("[object-$objectID]", $target, $content);
+        }
+    }
+    return $content;
+}
+
+function mp_dd_filter_product_tags($content)
+{
+    if (preg_match_all('/\[product-(\d+)-(.*?)-(.*?)\]/', $content, $matches)) {
+        foreach ($matches[1] as $key => $productID) {
+            $title = get_post($productID)->post_title;
+            $cost = $matches[2][$key];
+            $inStock = $matches[3][$key];
+            $target = "<tr><td>$title</td><td>$cost</td><td>$inStock</td></tr>";
+            $content = str_replace("[product-$productID-$cost-$inStock]", $target, $content);
         }
     }
     return $content;
