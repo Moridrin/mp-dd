@@ -21,13 +21,12 @@ function mp_dd_filter_content($content)
     }
     $content = mp_dd_filter_object_tags($content);
     $content = mp_dd_filter_product_tags($content);
-//    $content = mp_dd_filter_spell_tags($content);
+    $content = mp_dd_filter_spell_tags($content);
     return $content;
 }
 
 function mp_dd_filter_area_content($content, $post)
 {
-//    mp_var_export(get_post_meta($post->ID, 'map_image_id', true), true);
     if (strpos($content, '[map]') === false && !empty(get_post_meta($post->ID, 'map_image_id', true))) {
         $content = '[map]' . $content;
     }
@@ -37,11 +36,24 @@ function mp_dd_filter_area_content($content, $post)
     return $content;
 }
 
-function mp_dd_filter_object_tags($content, $makeModal = true, $top = null)
+function mp_dd_filter_object_tags($content, $makeModal = true)
 {
+    if (preg_match_all('/\[object-(\d+)\]/', $content, $matches)) {
+        foreach ($matches[1] as $objectID) {
+            $target = mp_dd_get_object_content($objectID);
+            $content = str_replace("[object-$objectID]", $target, $content);
+        }
+    }
+    if (preg_match_all('/\[object-(\d+)-tooltipped\]/', $content, $matches)) {
+        foreach ($matches[1] as $key => $objectID) {
+            $target = mp_dd_get_object_content($objectID, true);
+            $content = str_replace("[object-$objectID-tooltipped]", $target, $content);
+        }
+    }
     if (preg_match_all('/\[object-(\d+)-(.*?)\]/', $content, $matches)) {
         foreach ($matches[1] as $key => $objectID) {
-            switch ($matches[2][$key]) {
+            $type = $matches[2][$key];
+            switch ($type) {
                 case 'url':
                     $target = $makeModal ? "#modal_$objectID" : "#$objectID";
                     $content = str_replace("[object-$objectID-url]", $target, $content);
@@ -50,20 +62,14 @@ function mp_dd_filter_object_tags($content, $makeModal = true, $top = null)
                 default:
                     $title = get_post($objectID)->post_title;
                     $target = $makeModal ? "<a href=\"#modal_$objectID\">$title</a>" : "#$objectID";
-                    $content = str_replace("[object-$objectID-link]", $target, $content);
+                    $content = str_replace("[object-$objectID-$type]", $target, $content);
                     break;
             }
             if (strpos($content, "id=\"modal_$objectID\"") === false) {
-                $objectContent = mp_dd_get_object_content($objectID, $top);
+                $objectContent = mp_dd_get_object_content($objectID);
                 $objectContent = $makeModal ? mp_dd_make_modal($objectContent, $objectID) : $objectContent;
                 $content .= $objectContent;
             }
-        }
-    }
-    if (preg_match_all('/\[object-(\d+)\]/', $content, $matches)) {
-        foreach ($matches[1] as $objectID) {
-            $target = mp_dd_get_object_content($objectID, $top);
-            $content = str_replace("[object-$objectID]", $target, $content);
         }
     }
     return $content;
@@ -78,6 +84,19 @@ function mp_dd_filter_product_tags($content)
             $inStock = $matches[3][$key];
             $target = "<tr><td>$title</td><td>$cost</td><td>$inStock</td></tr>";
             $content = str_replace("[product-$productID-$cost-$inStock]", $target, $content);
+        }
+    }
+    return $content;
+}
+
+function mp_dd_filter_spell_tags($content)
+{
+    if (preg_match_all('/\[spell-(\d+)-(.*?)\]/', $content, $matches)) {
+        foreach ($matches[1] as $key => $productID) {
+            $title = get_post($productID)->post_title;
+            $cost = $matches[2][$key];
+            $target = "<tr><td>$title</td><td>$cost</td></tr>";
+            $content = str_replace("[spell-$productID-$cost]", $target, $content);
         }
     }
     return $content;
@@ -104,7 +123,11 @@ function mp_dd_get_map(WP_Post $post): string
         <div id="map" style="width: <?= getimagesize($image_src)[0] ?>px;margin: auto; position: relative">
             <img id="map_image" src="<?= $image_src ?>"/>
             <?php $number = 1; ?>
+            <?php $terms = []; ?>
             <?php foreach ($visibleObjects as $visibleObject): ?>
+                <?php $terms = array_merge($terms, wp_get_post_terms($visibleObject, 'area_type')); ?>
+                <?php $terms = array_merge($terms, wp_get_post_terms($visibleObject, 'npc_type')); ?>
+                <?php $terms = array_merge($terms, wp_get_post_terms($visibleObject, 'object_type')); ?>
                 <?php $labelColor = mp_dd_get_area_label_color(wp_get_post_terms($visibleObject, 'area_type')); ?>
                 <?php list($left, $top) = isset($labelTranslations[$visibleObject]) ? $labelTranslations[$visibleObject] : 'translate(0px, 0px)'; ?>
                 <a href="[object-<?= $visibleObject ?>-url]" class="area-label" style="left: <?= $left + 3 ?>px; top: <?= $top + 3 ?>px; border: 3px solid <?= $labelColor ?>;"><?= $number ?></a>
@@ -113,8 +136,8 @@ function mp_dd_get_map(WP_Post $post): string
         </div>
     </div>
     <div class="row">
-        <?php foreach (get_terms('area_type') as $term): ?>
-            <?php $color = empty($term->description) ? '#A0A0A0' : $term->description; ?>
+        <?php foreach (array_unique($terms, SORT_REGULAR) as $term): ?>
+            <?php $color = ctype_xdigit($term->description) ? '#A0A0A0' : $term->description; ?>
             <div class="col s12 m3 area-label-legend" style="border: 3px solid <?= $color ?>"><?= $term->name ?></div>
         <?php endforeach; ?>
     </div>
@@ -135,40 +158,38 @@ function mp_dd_get_area_label_color(array $terms): string
 #endregion
 
 #region Object Content
-function mp_dd_get_object_content(int $objectID, $top = null): string
+function mp_dd_get_object_content(int $objectID, bool $tooltipped = false): string
 {
     $object = get_post($objectID);
     switch ($object->post_type) {
         case 'area':
-            return mp_dd_get_area_content($objectID, $top);
+            return mp_dd_get_area_content($objectID);
         case 'npc':
-            return mp_dd_get_npc_content($objectID, $top);
+            return mp_dd_get_npc_content($objectID, $tooltipped);
         default:
             return '';
     }
 }
 
-function mp_dd_get_area_content(int $areaID, $top = null): string
+function mp_dd_get_area_content(int $areaID): string
 {
     $area = get_post($areaID);
     ob_start();
     $postLink = get_permalink($areaID);
-    $topLink = $top !== null ? "<a href='#$top'>&uarr;</a>" : '';
     ?>
-    <div><a href="<?= $postLink ?>" style="color:inherit;"><h1 id="<?= $areaID ?>" style="display: inline-block;"><?= $area->post_title ?></h1></a> <?= $topLink ?></div>
-    <?= mp_dd_filter_object_tags(mp_dd_filter_area_content($area->post_content, $area), false, $areaID); ?>
+    <div><a href="<?= $postLink ?>" style="color:inherit;"><h1 id="<?= $areaID ?>" style="display: inline-block;"><?= $area->post_title ?></h1></a></div>
+    <?= mp_dd_filter_object_tags($area->post_content, false); ?>
     <?php
     return ob_get_clean();
 }
 
-function mp_dd_get_npc_content(int $npcID, $top = null)
+function mp_dd_get_npc_content(int $npcID, bool $tooltipped = false)
 {
     $npc        = get_post($npcID);
     $profession = get_post_meta($npcID, 'profession', true);
     $profession = $profession ? '<span style="margin-left: 5px;"> (' . $profession . ')</span>' : '';
     $postLink = get_permalink($npcID);
-    $topLink = $top !== null ? "<a href='#$top'>&uarr;</a>" : '';
-    $npcHTML    = "<div><a href='$postLink' style='color:inherit;'><h2 id='$npcID' style=\"display: inline-block;\">$npc->post_title</h2></a> $profession $topLink</div>";
+    $npcHTML = '';
     if (has_post_thumbnail($npcID)) {
         $npcHTML .= '<div class="row">';
         $npcHTML .= '<div class="col s10" style="padding-left: 0;">';
@@ -189,6 +210,12 @@ function mp_dd_get_npc_content(int $npcID, $top = null)
         $npcHTML .= '<div class="col s2 valign-wrapper center-align">';
         $npcHTML .= get_the_post_thumbnail($npcID, 'thumbnail');
         $npcHTML .= '</div></div>';
+    }
+    if ($tooltipped) {
+        $npcHTML = '<div class="html-tooltip" style="display: block; max-width: 800px; text-align: left">' . $npcHTML . '</div>';
+        $npcHTML = "<div><a href='$postLink' style='color:inherit;' class='tooltipped' data-tooltip='$npcHTML'><h2 id='$npcID' style=\"display: inline-block;\">$npc->post_title</h2></a> $profession</div>";
+    } else {
+        $npcHTML = "<div><a href='$postLink' style='color:inherit;'><h2 id='$npcID' style=\"display: inline-block;\">$npc->post_title</h2></a> $profession</div>".$npcHTML;
     }
 
     return $npcHTML;
