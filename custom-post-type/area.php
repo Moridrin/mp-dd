@@ -114,8 +114,8 @@ add_action('init', 'mp_dd_area_type_taxonomy');
 function mp_dd_area_meta_boxes()
 {
     add_meta_box('mp_dd_area_include_tag', 'Tags', 'mp_dd_area_include_tag', 'area', 'after_title', 'high');
-    add_meta_box('mp_dd_area_info', 'Info', 'mp_dd_area_info', 'area', 'advanced', 'high');
-    add_meta_box('mp_dd_area_map', 'Map', 'mp_dd_area_map', 'area', 'advanced', 'high');
+    add_meta_box('mp_dd_area_map', 'Map', 'mp_dd_area_map', 'area', 'normal', 'high');
+    add_meta_box('mp_dd_area_info', 'Info', 'mp_dd_area_info', 'area', 'normal', 'high');
 }
 
 add_action('add_meta_boxes', 'mp_dd_area_meta_boxes');
@@ -188,10 +188,10 @@ function mp_dd_area_map()
     </div>
     <input type="hidden" name="map_image_id" id="upload_image_id" value="<?php echo $image_id; ?>"/>
     <p>
-        <a title="<?php esc_attr_e('Set book image') ?>" href="#"
-           id="set-map-image"><?php _e('Set book image') ?></a>
-        <a title="<?php esc_attr_e('Remove book image') ?>" href="#" id="remove-map-image"
-           style="<?php echo(!$image_id ? 'display:none;' : ''); ?>"><?php _e('Remove book image') ?></a>
+        <a title="Set Map Image" href="#"
+           id="set-map-image">Set Map Image</a>
+        <a title="Remove Map Image" href="#" id="remove-map-image"
+           style="<?php echo(!$image_id ? 'display:none;' : ''); ?>">Remove Map Image</a>
     </p>
     <?php
 }
