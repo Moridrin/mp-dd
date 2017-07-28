@@ -1,232 +1,144 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: moridrin
- * Date: 2-7-17
- * Time: 9:48
- */
 
-#region Post Content
-/**
- * @param string $content
- *
- * @return string
- */
+add_filter('the_content', 'mp_dd_filter_content');
 function mp_dd_filter_content($content)
 {
     global $post;
+    return mp_dd_filter_object_content($post->ID, $content);
+}
 
-    #region Map
-    if ($post->post_type == 'map') {
-        $content = mp_dd_get_map_content($post->ID);
+function mp_dd_filter_object_content(int $postID, string $content = null)
+{
+    $post = get_post($postID);
+    if ($content == null) {
+        $content = $post->post_content;
     }
-    if (preg_match_all("/\[map-([0-9]+)\]/", $content, $mapMatches)) {
-        foreach ($mapMatches[1] as $mapID) {
-            $mapHTML = mp_dd_get_map_content($mapID);
-            $content = str_replace("[map-$mapID]", $mapHTML, $content);
+    if ($post->post_type == 'area') {
+        if (strpos($content, '[map]') === false && !empty(get_post_meta($post->ID, 'map_image_id', true))) {
+            $content = '[map]' . $content;
+        }
+        if (strpos($content, '[map]') !== false) {
+            $content = str_replace('[map]', mp_dd_get_map($post), $content);
         }
     }
-    #endregion
-
-    #region Building
-    if ($post->post_type == 'building') {
-        $content = mp_dd_get_building_content($post->ID);
-    }
-    if (preg_match_all("/\[building-url-([0-9]+)\]/", $content, $buildingURLMatches)) {
-        foreach ($buildingURLMatches[1] as $buildingID) {
-            $content = str_replace("[building-url-$buildingID]", "#modal_$buildingID", $content);
-            if (strpos($content, 'id="modal_' . $buildingID . '"') === false) {
-                $buildingHTML = mp_dd_get_building_content($buildingID, true);
-                $content      .= $buildingHTML;
-            }
-        }
-    }
-    if (preg_match_all("/\[building-link-([0-9]+)\]/", $content, $buildingURLMatches)) {
-        foreach ($buildingURLMatches[1] as $buildingID) {
-            if (!get_post($buildingID)) {
-                continue;
-            }
-            $buildingTitle = get_post($buildingID)->post_title;
-            $buildingLink  = "<a href=\"#modal_$buildingID\">$buildingTitle</a>";
-            $content       = str_replace("[building-link-$buildingID]", $buildingLink, $content);
-            if (strpos($content, 'id="modal_' . $buildingID . '"') === false) {
-                $buildingHTML = mp_dd_get_building_content($buildingID, true);
-                $content      .= $buildingHTML;
-            }
-        }
-    }
-    if (preg_match_all("/\[building-link-with-type-([0-9]+)\]/", $content, $buildingURLMatches)) {
-        foreach ($buildingURLMatches[1] as $buildingID) {
-            if (!get_post($buildingID)) {
-                continue;
-            }
-            $ownerID         = get_post_meta($buildingID, 'owner', true);
-            $ownerProfession = get_post_meta($ownerID, 'profession', true);
-            $buildingTitle   = get_post($buildingID)->post_title . ' - ' . $ownerProfession;
-            $buildingLink    = "<a href=\"#modal_$buildingID\">$buildingTitle</a>";
-            $content         = str_replace("[building-link-$buildingID]", $buildingLink, $content);
-            if (strpos($content, 'id="modal_' . $buildingID . '"') === false) {
-                $buildingHTML = mp_dd_get_building_content($buildingID, true);
-                $content      .= $buildingHTML;
-            }
-        }
-    }
-    #endregion
-
-    #region NPC
-    if (preg_match_all("/(\[npc-li-([0-9]+)(-spouse)?(-child)?\]){1,}/", $content, $npcGroupMatches)) {
-        foreach ($npcGroupMatches[0] as $npcGroupMatch) {
-            $npcHTML = '<ul class="collapsible" data-collapsible="expandable">';
-            preg_match_all("/\[npc-li?-([0-9]+)(-spouse)?(-child)?\]/", $npcGroupMatch, $npcMatches);
-            for ($i = 0; $i < count($npcMatches[1]); $i++) {
-                $npcID      = $npcMatches[1][$i];
-                $npc        = get_post($npcID);
-                $profession = get_post_meta($npcID, 'profession', true);
-                $profession = $profession ? '<span style="margin-left: 5px;"> (' . $profession . ')</span>' : '';
-                $profession = $npcMatches[2][$i] == '-spouse' ? '<span style="margin-left: 5px;"> (spouse)</span>' : $profession;
-                $profession = $npcMatches[3][$i] == '-child' ? '<span style="margin-left: 5px;"> (child)</span>' : $profession;
-                $npcHTML    .= '<li>';
-                $npcHTML    .= '<div class="collapsible-header">';
-                $npcHTML    .= '<h3 style="display: inline-block;">' . $npc->post_title . '</h3>' . $profession;
-                $npcHTML    .= '</div>';
-                $npcHTML    .= '<div class="collapsible-body">';
-                $npcHTML    .= mp_dd_get_npc_content($npcID);
-                $npcHTML    .= '</div>';
-                $npcHTML    .= '</li>';
-            }
-            $npcHTML .= '</ul>';
-            $content = str_replace($npcGroupMatch, $npcHTML, $content);
-        }
-    }
-    if (preg_match_all("/\[npc-([0-9]+)(-spouse)?(-child)?\]/", $content, $npcMatches)) {
-        for ($i = 0; $i < count($npcMatches[1]); $i++) {
-            $npcID   = $npcMatches[1][$i];
-            $npcHTML = mp_dd_get_npc_content($npcID, $npcMatches[2][$i] == '-spouse', $npcMatches[3][$i] == '-child');
-            $search  = '[npc-' . $npcID . $npcMatches[2][$i] . $npcMatches[3][$i] . ']';
-            $content = str_replace($search, $npcHTML, $content);
-        }
-    }
-    #endregion
-
+    $content = mp_dd_filter_object_tags($content);
+//    $content = mp_dd_filter_product_tags($content);
+//    $content = mp_dd_filter_spell_tags($content);
     return $content;
 }
 
-add_filter('the_content', 'mp_dd_filter_content');
-#endregion
-
-#region Get Map
-/**
- * @param int $mapID
- *
- * @return string
- */
-function mp_dd_get_map_content($mapID)
+#region Map
+function mp_dd_get_map(WP_Post $post): string
 {
-    $map     = get_post($mapID);
-    $mapHTML = $map->post_content;
-    if (strpos($mapHTML, '[building-labels]') !== false) {
-        $buildingLabels = get_post_meta($mapID, 'building_labels', true);
-        ob_start();
-        foreach ($buildingLabels as $buildingLabel) {
-            ?>
-            <div style="position:absolute; top:<?= $buildingLabel['top'] ?>px; left:<?= $buildingLabel['left'] ?>px; z-index: 100">
-                <?php if ($buildingLabel['showing']): ?>
-                    <?php $url = isset($buildingLabel['id']) ? '[building-url-' . $buildingLabel['id'] . ']' : '#modal' . $buildingLabel['id']; ?>
-                    <a href="<?= $url ?>" style="color: #FFFFFF; background: rgba(0,0,0,0.6); height: 30px; width: 30px; text-align: center; display: block; border: 3px solid <?= $buildingLabel['color'] ?>; border-radius: 20%;font-size: 9px;line-height: 25px;">
-                        <?= $buildingLabel['label'] ?>
-                    </a>
-                <?php endif; ?>
-            </div>
-            <?php
-        }
-        $mapHTML = str_replace('[building-labels]', ob_get_clean(), $mapHTML);
-    }
-    return $mapHTML;
-}
-
-#endregion
-
-#region Get Building
-/**
- * @param int  $buildingID
- * @param bool $inModal
- *
- * @return string
- */
-function mp_dd_get_building_content($buildingID, $inModal = false)
-{
-    $building = get_post($buildingID);
-    if (!$building) {
+    $image_id          = get_post_meta($post->ID, 'map_image_id', true);
+    if (empty($image_id)) {
         return '';
     }
-
-    $buildingHTML = "<h2 style=\"display: inline-block;\">$building->post_title</h2> ($buildingID)<br/>";
-    $buildingHTML .= $building->post_content;
-    if ($inModal) {
-        $buildingHTML = "<div id=\"modal_$buildingID\" class=\"modal modal-fixed-footer\"><div class=\"modal-content\">$buildingHTML</div></div>";
-    }
-
-    if (preg_match('/\[npc(-li)?-owner\]/', $buildingHTML)) {
-        $ownerID      = get_post_meta($building->ID, 'owner', true);
-        $buildingHTML = preg_replace('/\[npc(-li)?-owner\]/', "[npc$1-$ownerID]", $buildingHTML);
-    }
-    if (preg_match('/\[npc(-li)?-owner-with-family\]/', $buildingHTML)) {
-        $ownerID         = get_post_meta($building->ID, 'owner', true);
-        $ownerWithFamily = "[npc$1-$ownerID]";
-        $spouse          = get_post_meta($ownerID, 'spouse', true);
-        if ($spouse) {
-            $ownerWithFamily .= "[npc$1-$spouse-spouse]";
-        }
-        $children = get_post_meta($ownerID, 'children', true);
-        foreach ($children as $child) {
-            $ownerWithFamily .= "[npc$1-$child-child]";
-        }
-        $buildingHTML = preg_replace('/\[npc(-li)?-owner-with-family\]/', $ownerWithFamily, $buildingHTML);
-    }
-    return $buildingHTML;
+    $image_src         = wp_get_attachment_url($image_id);
+    $visibleObjects    = get_post_meta($post->ID, 'visible_objects', true);
+    $visibleObjects    = is_array($visibleObjects) ? $visibleObjects : [];
+    $labelTranslations = get_post_meta($post->ID, 'label_translations', true);
+    $labelTranslations = is_array($labelTranslations) ? $labelTranslations : [];
+    ob_start();
+    ?>
+    <div style="overflow-x: auto; overflow-y: hidden;">
+        <div id="map" style="width: <?= getimagesize($image_src)[0] ?>px;margin: auto; position: relative">
+            <img id="map_image" src="<?= $image_src ?>" class="materialboxed"/>
+            <?php $number = 1; ?>
+            <?php $terms = []; ?>
+            <?php foreach ($visibleObjects as $visibleObject): ?>
+                <?php $terms = array_merge($terms, wp_get_post_terms($visibleObject, 'area_type')); ?>
+                <?php $terms = array_merge($terms, wp_get_post_terms($visibleObject, 'npc_type')); ?>
+                <?php $terms = array_merge($terms, wp_get_post_terms($visibleObject, 'object_type')); ?>
+                <?php $labelColor = mp_dd_get_area_label_color(wp_get_post_terms($visibleObject, 'area_type')); ?>
+                <?php list($left, $top) = isset($labelTranslations[$visibleObject]) ? $labelTranslations[$visibleObject] : 'translate(0px, 0px)'; ?>
+                <a href="[object-<?= $visibleObject ?>-url]" class="area-label" style="left: <?= $left + 3 ?>px; top: <?= $top + 3 ?>px; border: 3px solid <?= $labelColor ?>;"><?= $number ?></a>
+                <?php ++$number; ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <div class="row">
+        <?php foreach (array_unique($terms, SORT_REGULAR) as $term): ?>
+            <?php $color = ctype_xdigit($term->description) ? '#A0A0A0' : $term->description; ?>
+            <div class="col s12 m3 area-label-legend" style="border: 3px solid <?= $color ?>"><?= $term->name ?></div>
+        <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
 }
 
-#endregion
-
-#region Get NPC
-/**
- * @param int  $npcID
- * @param bool $isSpouse
- * @param bool $isChild
- *
- * @return string
- */
-function mp_dd_get_npc_content($npcID, $isSpouse = false, $isChild = false)
+function mp_dd_get_area_label_color(array $terms): string
 {
-    $npc        = get_post($npcID);
-    $profession = get_post_meta($npcID, 'profession', true);
-    $profession = $profession ? '<span style="margin-left: 5px;"> (' . $profession . ')</span>' : '';
-    $profession = $isSpouse ? '<span style="margin-left: 5px;"> (spouse)</span>' : $profession;
-    $profession = $isChild ? '<span style="margin-left: 5px;"> (child)</span>' : $profession;
-    $style      = !empty($profession) ? 'style="display: inline-block;"' : '';
-    $npcHTML    = "<h2 $style>$npc->post_title</h2> $profession";
-    if (has_post_thumbnail($npcID)) {
-        $npcHTML .= '<div class="row">';
-        $npcHTML .= '<div class="col s10" style="padding-left: 0;">';
+    if (empty($terms)) {
+        return '#A0A0A0';
     }
-    $npcHTML .= '<p>';
-    $class   = get_post_meta($npcID, 'class', true);
-    $level   = get_post_meta($npcID, 'level', true);
-    if ($class && $level) {
-        $npcHTML .= '<b>Class:</b> ' . $class . ' <b>Level:</b> ' . $level . '<br/>';
-    }
-    $npcHTML .= '<b>Height:</b> ' . get_post_meta($npcID, 'height', true) . ' <b>Weight:</b> ' . get_post_meta($npcID, 'weight', true) . '<br/>';
-    $npcHTML .= $npc->post_content . '<br/>';
-    $npcHTML .= '<b>Wearing:</b> ' . get_post_meta($npcID, 'clothing', true) . '<br/>';
-    $npcHTML .= '<b>Possessions:</b> ' . get_post_meta($npcID, 'possessions', true) . '<br/>';
-    $npcHTML .= '</p>';
-    if (has_post_thumbnail($npcID)) {
-        $npcHTML .= '</div>';
-        $npcHTML .= '<div class="col s2 valign-wrapper center-align">';
-        $npcHTML .= get_the_post_thumbnail($npcID, 'thumbnail');
-        $npcHTML .= '</div></div>';
-    }
-
-    return $npcHTML;
+    $term = end($terms);
+    $color = $term->description;
+    return empty($color) ? '#A0A0A0' : $color;
 }
 #endregion
+
+function mp_dd_filter_object_tags($content)
+{
+    if (preg_match_all('/\[object-(\d+)(.*?)\]/', $content, $matches)) {
+        foreach ($matches[1] as $key => $objectID) {
+            $type = $matches[2][$key];
+            switch ($type) {
+                case '-url':
+                    $makeModal = true;
+                    $target = $makeModal ? "#modal_$objectID" : "#$objectID";
+                    $content = str_replace("[object-$objectID-url]", $target, $content);
+                    break;
+                case '-link':
+                    $makeModal = true;
+                    $title = get_post($objectID)->post_title;
+                    $target = $makeModal ? "<a href=\"#modal_$objectID\">$title</a>" : "#$objectID";
+                    $content = str_replace("[object-$objectID-link]", $target, $content);
+                    break;
+                case '-li':
+                    $makeModal = false;
+                    $li = '<li><div class="collapsible-header">'.mp_dd_get_object_header($objectID, false, 2).'</div>';
+                    $li .= '<div class="collapsible-body">'.mp_dd_filter_object_content($objectID).'</div></li>';
+                    $content = str_replace("[object-$objectID-li]", $li, $content);
+                    break;
+                default:
+                    $makeModal = false;
+                    $target = mp_dd_filter_object_content($objectID);
+                    $content = str_replace("[object-$objectID$type]", $target, $content);
+                    break;
+            }
+            if (strpos($content, "id=\"modal_$objectID\"") === false && $makeModal) {
+                $objectTitle = mp_dd_get_object_header($objectID);
+                $objectContent = mp_dd_filter_object_content($objectID);
+                $objectModal = mp_dd_make_modal($objectTitle . $objectContent, $objectID);
+                $content .= $objectModal;
+            }
+        }
+    }
+    return $content;
+}
+
+#region Content & Header
+function mp_dd_get_object_header(int $objectID, bool $withLink = true, $header = '1'): string
+{
+    $object = get_post($objectID);
+    $title = $object->post_title;
+    $addedTag = get_post_meta($objectID, 'profession', true);
+    if (strpos($title, '(') !== false && strpos($title, ')') !== false) {
+        $addedTag = explode(')', explode('(', $title)[1])[0];
+        $title = trim(str_replace('('.$addedTag.')', '', $title));
+    }
+    $addedTag = $addedTag ? '<span style="margin-left: 5px;"> (' . $addedTag . ')</span>' : '';
+    $postLink = get_permalink($objectID);
+    if ($withLink) {
+        return '<div><a href="'.$postLink.'" style="color:inherit; margin-top: 0.4em;"><h'.$header.' style="display: inline-block;">'.$title.'</h'.$header.'></a>'.$addedTag.'</div>';
+    } else {
+        return '<div><h'.$header.' style="display: inline-block; margin-top: 0.4em;">'.$title.'</h'.$header.'>'.$addedTag.'</div>';
+    }
+}
+#endregion
+
+function mp_dd_make_modal(string $content, int $objectID): string
+{
+    return "<div id=\"modal_$objectID\" class=\"modal\"><div id='modal_top'></div><div class=\"modal-content\">$content</div></div>";
+}
