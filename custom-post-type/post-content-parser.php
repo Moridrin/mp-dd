@@ -4,10 +4,10 @@ add_filter('the_content', 'mp_dd_filter_content');
 function mp_dd_filter_content($content)
 {
     global $post;
-    return mp_dd_filter_object_content($post->ID, $content);
+    return mp_dd_filter_object_content($post->ID, $content, false);
 }
 
-function mp_dd_filter_object_content(int $postID, string $content = null)
+function mp_dd_filter_object_content(int $postID, string $content = null, bool $inModal = true)
 {
     $post = get_post($postID);
     if ($content == null) {
@@ -18,7 +18,7 @@ function mp_dd_filter_object_content(int $postID, string $content = null)
             $content = '[map]'.$content;
         }
         if (strpos($content, '[map]') !== false) {
-            $content = str_replace('[map]', mp_dd_get_map($post), $content);
+            $content = str_replace('[map]', $inModal ? '' : mp_dd_get_map($post), $content);
         }
     }
     if ($post->post_type == 'npc') {
