@@ -21,6 +21,7 @@
     border: 3px solid #FFFFFF;
     font-family: monospace;
     font-size: small;
+    cursor: pointer;
 }
 
 .mp-draggable {
