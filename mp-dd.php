@@ -3,7 +3,7 @@
  * Plugin Name: MP D&D
  * Plugin URI: http://moridrin.com/mp-dd
  * Description: With MP D&D you have lots of functionality to keep track of your D&D world.
- * Version: 2.0.0
+ * Version: 1.0.0
  * Author: Jeroen Berkvens
  * Author URI: http://nl.linkedin.com/in/jberkvens/
  * License: WTFPL
@@ -12,58 +12,60 @@
 
 namespace mp_dd;
 
+use mp_dd\models\CombatAction;
+
 if (!defined('ABSPATH')) {
     exit;
 }
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+
 define('MP_DD_PATH', plugin_dir_path(__FILE__));
-define('MP_DD_URL', plugins_url() . '/mp-dd/');
+define('MP_DD_URL', plugins_url() . '/' . plugin_basename(__DIR__));
 
-#region Require Once
-require_once 'functions.php';
+require_once 'general/general.php';
+require_once 'Ajax.php';
+require_once 'MP_DD.php';
+require_once 'Options.php';
+require_once 'Revisions/R1.php';
+require_once 'post-type/Npc/Admin.php';
+require_once 'post-type/Area/Admin.php';
+require_once 'post-type/Object/Admin.php';
+require_once 'post-type/Encounter/Admin.php';
+require_once 'post-type/Encounter/Frontend.php';
+require_once 'post-type/Location.php';
+require_once 'models/Creature.php';
+require_once 'models/CombatAction.php';
+require_once 'models/Player.php';
+require_once 'models/Monster.php';
+require_once 'models/CombatMonster.php';
+require_once 'shortcodes/DNDBeyond.php';
+require_once 'shortcodes/Npc.php';
+require_once 'shortcodes/Product.php';
+require_once 'shortcodes/Calendar.php';
+require_once 'shortcodes/MoridrinMaps.php';
+require_once 'shortcodes/DndbCharacters.php';
+require_once 'shortcodes/TimeLine.php';
 
-require_once 'include/JSLikeHTMLElement.php';
-
-require_once 'models/City.php';
-
-require_once 'custom-post-type/post-content-parser.php';
-require_once 'custom-post-type/area.php';
-require_once 'custom-post-type/npc.php';
-require_once 'custom-post-type/object.php';
-
-require_once 'options/options.php';
-#endregion
-
-#region SSV_Users class
-class MP_DD
+// TODO Move
+function mp_filter_atra_from_log(CombatAction $action, array $creatures)
 {
-    #region Constants
-    const PATH = MP_DD_PATH;
-    const URL = MP_DD_URL;
-
-    const HOOK_RESET_OPTIONS = 'mp_dd__hook_reset_options';
-
-    const OPTION_PUBLISH_ERROR = 'mp_dd__option_publish_error';
-    const OPTION_LAST_CITY_REMOVED = 'mp_dd__option_last_city_removed';
-    #endregion
-
-    #region resetOptions()
-    /**
-     * This function sets all the options for this plugin back to their default value
-     */
-    public static function resetOptions()
-    {
-        // There currently aren't any options
+    $actorIsAtra = $creatures[$action->getActor()]->getName() === 'Atra';
+    $currentUserIsAtra = current_user_can('atra') || current_user_can('administrator');
+    if ($actorIsAtra && !$currentUserIsAtra) {
+        return false;
     }
-
-    #endregion
-
-    public static function CLEAN_INSTALL()
-    {
-        mp_dd_unregister();
-        mp_dd_register_plugin();
-    }
+    return true;
 }
-#endregion
+
+add_filter('dd_encounters_player_is_allowed_to_view_log', 'mp_filter_atra_from_log', 10, 2);
+
+function mp_filter_publish_date($the_date, $d, \WP_Post $post)
+{
+    $tmp = new \DateTime($the_date);
+    $tmp->add(new \DateInterval('P1100Y'));
+    if ('' == $d) {
+        $d = get_option('date_format');
+    }
+    return $tmp->format($d);
+}
+
+add_filter('get_the_date', 'mp_filter_publish_date', 10, 3);
