@@ -21,6 +21,7 @@ if (!defined('ABSPATH')) {
 define('MP_DD_PATH', plugin_dir_path(__FILE__));
 define('MP_DD_URL', plugins_url() . '/' . plugin_basename(__DIR__));
 
+require_once 'functions.php';
 require_once 'general/general.php';
 require_once 'Ajax.php';
 require_once 'MP_DD.php';
@@ -44,8 +45,14 @@ require_once 'shortcodes/Calendar.php';
 require_once 'shortcodes/MoridrinMaps.php';
 require_once 'shortcodes/DndbCharacters.php';
 require_once 'shortcodes/TimeLine.php';
+require_once 'Parser/Parser.php';
+require_once 'Parser/ImageCombiner.php';
+if (!class_exists('simple_html_dom_node')) {
+    require_once 'include/simple_html_dom.php';
+}
 
 // TODO Move
+
 function mp_filter_atra_from_log(CombatAction $action, array $creatures)
 {
     $actorIsAtra = $creatures[$action->getActor()]->getName() === 'Atra';

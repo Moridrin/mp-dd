@@ -60,6 +60,7 @@ abstract class Options
         add_submenu_page('mp_dd_settings', 'MP D&D', 'MP D&D', 'edit_posts', 'mp_dd_settings', [self::class, 'showOptionsPage']);
         add_submenu_page('edit.php?post_type=encounter', 'Monsters', 'Monsters', 'edit_monsters', 'dd_monsters', [self::class, 'showMonstersList']);
         add_submenu_page('edit.php?post_type=encounter', 'Players', 'Players', 'edit_players', 'dd_players', [self::class, 'showPlayersList']);
+        add_submenu_page('mp_dd_settings', 'Parser', 'Parser', 'edit_posts', 'mp_dd_parser', [Options::class, 'showParserOptionsPage']);
     }
 
     public static function showOptionsPage()
@@ -174,6 +175,33 @@ abstract class Options
                 <button type="submit">Import</button>
             </form>
             <?php do_action('dd_encounters_monsters_list') ?>
+        </div>
+        <?php
+    }
+
+    public static function showParserOptionsPage(): void
+    {
+        $active_tab = "wizardawn";
+        if (isset($_GET['tab'])) {
+            $active_tab = $_GET['tab'];
+        }
+        ?>
+        <div class="wrap">
+            <h1>Users Options</h1>
+            <h2 class="nav-tab-wrapper">
+                <a href="?page=<?= $_GET['page'] ?>&tab=wizardawn" class="nav-tab <?= $active_tab == 'wizardawn' ? 'nav-tab-active' : '' ?>">Wizardawn</a>
+                <a href="?page=<?= $_GET['page'] ?>&tab=donjon" class="nav-tab <?= $active_tab == 'donjon' ? 'nav-tab-active' : '' ?>">donjon</a>
+            </h2>
+            <?php
+            switch ($active_tab) {
+                case "wizardawn":
+                    require_once "Parser/Wizardawn/Wizardawn.php";
+                    break;
+                case "donjon":
+                    require_once "Parser/Donjon.php";
+                    break;
+            }
+            ?>
         </div>
         <?php
     }
